@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/itcast/rosws/itheimalab_ws/src/itheima_msgs/cmake-build-debug/devel/setup.sh

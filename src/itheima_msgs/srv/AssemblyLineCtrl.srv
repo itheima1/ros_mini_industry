@@ -1,0 +1,10 @@
+uint8 LINE_1 = 1
+uint8 LINE_2 = 2
+uint8 LINE_3 = 3
+uint8 LINE_4 = 4
+uint8 LINE_ALL = 5
+bool STATE_START = 1
+bool STATE_STOP = 0
+
+uint8 line
+bool state

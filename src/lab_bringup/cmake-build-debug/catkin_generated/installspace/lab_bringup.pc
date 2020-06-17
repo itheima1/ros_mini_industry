@@ -1,0 +1,8 @@
+prefix=/usr/local
+
+Name: lab_bringup
+Description: Description of lab_bringup
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

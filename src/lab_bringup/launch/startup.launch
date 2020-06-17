@@ -1,0 +1,29 @@
+<launch>
+
+    <!-- 流水线ip和port -->
+    <arg name="assembly_host" default="10.10.100.254"/>
+    <arg name="assembly_port" default="5566"/>
+
+    <!-- aubo ip和port -->
+    <arg name="aubo_host" default="192.168.0.117"/>
+    <arg name="aubo_port" default="8899"/>
+
+    <!-- ui ip和port -->
+    <arg name="ui_host" default="192.168.0.137"/>
+    <arg name="ui_port" default="10008"/>
+
+    <!-- 流水线节点 -->
+    <node pkg="assembly_line" type="assembly_line_node.py" name="assembly_line">
+        <param name="assembly_host" type="str" value="$(arg assembly_host)"/>
+        <param name="assembly_port" type="int" value="$(arg assembly_port)"/>
+    </node>
+
+    <!-- aubo ui 同步节点 -->
+    <node pkg="aubo_ctrl" type="aubo_ui_sync_node.py" name="aubo_ui">
+        <param name="aubo_host" type="str" value="$(arg aubo_host)"/>
+        <param name="aubo_port" type="int" value="$(arg aubo_port)"/>
+        <param name="ui_host" type="str" value="$(arg ui_host)"/>
+        <param name="ui_port" type="int" value="$(arg ui_port)"/>
+    </node>
+
+</launch>
