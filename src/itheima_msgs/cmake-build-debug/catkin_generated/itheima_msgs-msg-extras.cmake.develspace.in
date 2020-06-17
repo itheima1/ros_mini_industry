@@ -1,2 +1,0 @@
-set(itheima_msgs_MESSAGE_FILES "/home/itcast/rosws/itheimalab_ws/src/itheima_msgs/msg/AssemblyIR.msg")
-set(itheima_msgs_SERVICE_FILES "/home/itcast/rosws/itheimalab_ws/src/itheima_msgs/srv/AssemblyLineCtrl.srv")
