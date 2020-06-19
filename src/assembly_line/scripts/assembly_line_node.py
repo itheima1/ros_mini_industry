@@ -3,9 +3,9 @@
 
 import rospy
 from itheima_msgs.srv import AssemblyLineCtrl, AssemblyLineCtrlRequest, AssemblyLineCtrlResponse
-from itheima_msgs.msg import AssemblyIR
+from itheima_msgs.msg import AssemblyIR, AssemblyLine
 
-from driver import AssemblyLine as AL
+from driver import AssemblyDevice
 
 line_status = {
     1: False,
@@ -18,6 +18,15 @@ ir_1 = False
 ir_2 = False
 
 
+def publish_line_state():
+    line = AssemblyLine()
+    line.line_1 = line_status[1]
+    line.line_2 = line_status[2]
+    line.line_3 = line_status[3]
+    line.line_4 = line_status[4]
+    line_publisher.publish(line)
+
+
 def callback(request):
     if not isinstance(request, AssemblyLineCtrlRequest): return
 
@@ -28,7 +37,7 @@ def callback(request):
 
     if state == AssemblyLineCtrlRequest.STATE_START:
         if line == AssemblyLineCtrlRequest.LINE_ALL:
-            al.start_all()
+            ad.start_all()
             line_status = {
                 1: True,
                 2: True,
@@ -36,11 +45,11 @@ def callback(request):
                 4: True
             }
         else:
-            al.start(line)
+            ad.start(line)
             line_status[line] = True
     else:
         if line == AssemblyLineCtrlRequest.LINE_ALL:
-            al.stop_all()
+            ad.stop_all()
             line_status = {
                 1: False,
                 2: False,
@@ -48,8 +57,11 @@ def callback(request):
                 4: False
             }
         else:
-            al.stop(line)
+            ad.stop(line)
             line_status[line] = False
+
+    # 推送流水线状态
+    publish_line_state()
 
     return AssemblyLineCtrlResponse()
 
@@ -62,27 +74,33 @@ if __name__ == '__main__':
     host = rospy.get_param("assembly_host", "10.10.100.254")
     port = rospy.get_param("assembly_port", 5566)
 
-    al = AL(host, port)
-    al.stop_all()
+    # 默认关闭所有的设备
+    ad = AssemblyDevice(host, port)
+    ad.stop_all()
 
     # 创建服务
     service = rospy.Service("/assembly/line_ctrl", AssemblyLineCtrl, callback)
 
-    # 创建publisher
-    publisher = rospy.Publisher("/assembly/ir", AssemblyIR, queue_size=1000)
+    # 创建红外线的publisher
+    ir_publisher = rospy.Publisher("/assembly/ir_state", AssemblyIR, queue_size=1000)
+
+    # 创建流水线状态的publisher
+    line_publisher = rospy.Publisher("/assembly/line_state", AssemblyLine, queue_size=1000)
 
     rate = rospy.Rate(10)
     while not rospy.is_shutdown():
 
-        status = al.get_ir_status()
+        status = ad.get_ir_status()
         if status is not None:
             rate.sleep()
             continue
 
+        print status
+
         msg = AssemblyIR()
         msg.ir_1 = status[0]
         msg.ir_2 = status[1]
-        publisher.publish(msg)
+        ir_publisher.publish(msg)
 
         rate.sleep()
 

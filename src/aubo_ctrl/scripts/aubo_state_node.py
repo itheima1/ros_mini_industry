@@ -4,7 +4,8 @@
 from lib.robotcontrol import *
 from time import *
 from math import degrees
-from Connector import Connector
+from std_msgs.msg import Float32MultiArray
+
 
 import rospy
 
@@ -19,16 +20,12 @@ def parse_point(point):
 
 
 if __name__ == '__main__':
-    rospy.init_node("aubo_ui_sync_node")
+    rospy.init_node("aubo_state_node")
 
     ip = rospy.get_param("aubo_host", "192.168.0.117")
     port = rospy.get_param("aubo_port", 8899)
 
-    ui_host = rospy.get_param("ui_host", "192.168.0.137")
-    ui_port = rospy.get_param("ui_port", 10008)
-
-    connector = Connector(ip=ui_host, port=ui_port)
-    connector.connect()
+    publisher = rospy.Publisher("/aubo/joints", Float32MultiArray, queue_size=1000)
 
     # 初始化Aubo系统
     Auboi5Robot.initialize()
@@ -51,11 +48,12 @@ if __name__ == '__main__':
             joints = parse_point(point)
             # print joints
 
-            connector.send_aubo_joints(joints)
+            msg = Float32MultiArray()
+            msg.data = joints
+            publisher.publish(msg)
 
             rate.sleep()
 
     # 系统退出
     Auboi5Robot.uninitialize()
 
-    connector.disconnect()
