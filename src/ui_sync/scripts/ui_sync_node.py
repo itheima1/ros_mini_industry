@@ -34,8 +34,8 @@ if __name__ == '__main__':
     node_name = "ui_sync_node"
     rospy.init_node(node_name)
 
-    ui_host = rospy.get_param("ui_host", "192.168.0.137")
-    ui_port = rospy.get_param("ui_port", 10008)
+    ui_host = rospy.get_param("~ui_host", "192.168.1.100")
+    ui_port = rospy.get_param("~ui_port", 10008)
 
     connector = Connector(ip=ui_host, port=ui_port)
     connector.connect()

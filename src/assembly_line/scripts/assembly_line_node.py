@@ -66,13 +66,26 @@ def callback(request):
     return AssemblyLineCtrlResponse()
 
 
+def ir_callback(status):
+    global ir_1, ir_2
+    if status[0] != ir_1 or status[1] != ir_2:
+        ir_1 = status[0]
+        ir_2 = status[1]
+
+        msg = AssemblyIR()
+        msg.ir_1 = ir_1
+        msg.ir_2 = ir_2
+        ir_publisher.publish(msg)
+
+
 if __name__ == '__main__':
     # 创建node
     node_name = "assembly_line_node"
     rospy.init_node(node_name)
 
-    host = rospy.get_param("assembly_host", "10.10.100.254")
-    port = rospy.get_param("assembly_port", 5566)
+    # host = rospy.get_param("assembly_host", "10.10.100.254")
+    host = rospy.get_param("~assembly_host", "192.168.1.104")
+    port = rospy.get_param("~assembly_port", 5566)
 
     # 默认关闭所有的设备
     ad = AssemblyDevice(host, port)
@@ -87,21 +100,8 @@ if __name__ == '__main__':
     # 创建流水线状态的publisher
     line_publisher = rospy.Publisher("/assembly/line_state", AssemblyLine, queue_size=1000)
 
+    # 获取红外数据
     rate = rospy.Rate(10)
-    while not rospy.is_shutdown():
-
-        status = ad.get_ir_status()
-        if status is not None:
-            rate.sleep()
-            continue
-
-        print status
-
-        msg = AssemblyIR()
-        msg.ir_1 = status[0]
-        msg.ir_2 = status[1]
-        ir_publisher.publish(msg)
-
-        rate.sleep()
+    ad.get_ir_status(lambda: not rospy.is_shutdown(), lambda: rate.sleep(), ir_callback)
 
     rospy.spin()

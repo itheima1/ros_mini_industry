@@ -22,8 +22,8 @@ def parse_point(point):
 if __name__ == '__main__':
     rospy.init_node("aubo_state_node")
 
-    ip = rospy.get_param("aubo_host", "192.168.0.117")
-    port = rospy.get_param("aubo_port", 8899)
+    ip = rospy.get_param("~aubo_host", "192.168.1.102")
+    port = rospy.get_param("~aubo_port", 8899)
 
     publisher = rospy.Publisher("/aubo/joints", Float32MultiArray, queue_size=1000)
 

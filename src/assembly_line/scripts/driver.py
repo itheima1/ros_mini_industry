@@ -1,5 +1,6 @@
 import socket
 import time
+import threading
 
 
 class AssemblyDevice:
@@ -65,16 +66,31 @@ class AssemblyDevice:
         except Exception as e:
             print e
 
-    def get_ir_status(self):
+    def _do_recv(self, udp_socket, check, callback):
         try:
-            udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            udp_socket.sendto(b'\xFE\x02\x00\x00\x00\x04\x6D\xC6', (self.host, self.port))
-            result = udp_socket.recv(6)
-            udp_socket.close()
+            while check():
+                result = udp_socket.recv(6)
 
-            a = result[3] & 0x02 != 0
-            b = result[3] & 0x04 != 0
-            return a, b
+                result = bytearray(result)
+                ir_2 = result[3] & 0x02 != 0
+                ir_1 = result[3] & 0x04 != 0
+
+                callback((ir_1, ir_2))
         except Exception as e:
             print e
-        return None
+        finally:
+            udp_socket.close()
+
+    def get_ir_status(self, check, sleep, callback):
+        try:
+            udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            thread = threading.Thread(target=self._do_recv, args=(udp_socket, check, callback))
+            thread.start()
+
+            while check():
+                udp_socket.sendto(b'\xFE\x02\x00\x00\x00\x04\x6D\xC6', (self.host, self.port))
+
+                sleep()
+            udp_socket.sendto(b'\xFE\x02\x00\x00\x00\x04\x6D\xC6', (self.host, self.port))
+        except Exception as e:
+            print e
