@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # coding=utf-8
 
-from lib.robotcontrol import *
+from aubo.robotcontrol import *
 from time import *
 from math import degrees
 from std_msgs.msg import Float32MultiArray
