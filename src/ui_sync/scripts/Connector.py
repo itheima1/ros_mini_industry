@@ -34,7 +34,7 @@ class Connector:
             self._client.connect((self._ip, self._port))
             self._set_connected(True)
             if callback is not None:
-                callback()
+                callback(True)
 
             # 接收
             recv_thread = threading.Thread(target=lambda: self._do_recv())
@@ -45,6 +45,8 @@ class Connector:
             send_thread.start()
         except Exception as e:
             print e
+            if callback is not None:
+                callback(False)
 
     def _do_recv(self):
         try:

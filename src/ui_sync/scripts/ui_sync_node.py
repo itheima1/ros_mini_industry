@@ -6,6 +6,7 @@ from Connector import Connector
 
 from std_msgs.msg import Float32MultiArray
 from itheima_msgs.msg import AssemblyLine, AssemblyIR
+import time
 
 
 def aubo_joints_callback(msg):
@@ -29,6 +30,12 @@ def assembly_ir_callback(msg):
     connector.send_assembly_ir(irs)
 
 
+def conn_cb(is_connected):
+    if not is_connected:
+        connector.connect(callback=conn_cb)
+        time.sleep(3)
+
+
 if __name__ == '__main__':
     # 创建node
     node_name = "ui_sync_node"
@@ -38,7 +45,7 @@ if __name__ == '__main__':
     ui_port = rospy.get_param("~ui_port", 10008)
 
     connector = Connector(ip=ui_host, port=ui_port)
-    connector.connect()
+    connector.connect(callback=conn_cb)
 
     # aubo joints
     rospy.Subscriber("/aubo/joints", Float32MultiArray, aubo_joints_callback)

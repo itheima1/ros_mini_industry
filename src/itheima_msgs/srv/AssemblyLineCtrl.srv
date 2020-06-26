@@ -8,3 +8,5 @@ bool STATE_STOP = 0
 
 uint8 line
 bool state
+---
+bool result
