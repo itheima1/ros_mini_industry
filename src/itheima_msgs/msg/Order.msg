@@ -1,0 +1,14 @@
+int32 STATE_WAITING = 0
+int32 STATE_SCAN_FEEDING = 1
+int32 STATE_GRIP_FEEDING = 2
+int32 STATE_TRANSPORT = 3
+int32 STATE_MARKING = 4
+int32 STATE_SCAN_BLANKING = 5
+int32 STATE_GRIP_BLANKING = 6
+int32 STATE_COMPLETED = 7
+
+int32 id
+int32 state
+int32 type
+string name
+string scan_id
