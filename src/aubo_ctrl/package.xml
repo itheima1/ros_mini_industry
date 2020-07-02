@@ -59,6 +59,14 @@
   <exec_depend>rosmsg</exec_depend>
   <exec_depend>rospy</exec_depend>
 
+  <build_depend>itheima_msgs</build_depend>
+  <build_export_depend>itheima_msgs</build_export_depend>
+  <exec_depend>itheima_msgs</exec_depend>
+
+  <build_depend>dh_hand_driver</build_depend>
+  <build_export_depend>dh_hand_driver</build_export_depend>
+  <exec_depend>dh_hand_driver</exec_depend>
+
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

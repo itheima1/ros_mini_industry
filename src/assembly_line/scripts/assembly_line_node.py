@@ -6,6 +6,7 @@ from itheima_msgs.srv import AssemblyLineCtrl, AssemblyLineCtrlRequest, Assembly
 from itheima_msgs.msg import AssemblyIR, AssemblyLine
 
 from driver import AssemblyDevice
+import sys
 
 
 ir_1 = False
@@ -97,7 +98,7 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
         line_states = ad.line_states
         ir_states = ad.ir_states
-
+        # print ir_states
         if ir_states[0] != ir_1 or ir_states[1] != ir_2:
             ir_1 = ir_states[0]
             ir_2 = ir_states[1]
@@ -116,5 +117,6 @@ if __name__ == '__main__':
         rate.sleep()
 
     ad.disconnect()
-
-    rospy.spin()
+    print "exit"
+    rospy.signal_shutdown("")
+    sys.exit(0)

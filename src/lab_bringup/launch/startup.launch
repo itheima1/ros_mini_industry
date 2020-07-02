@@ -5,7 +5,7 @@
     <arg name="assembly_port" default="5566"/>
 
     <!-- aubo ip和port -->
-    <arg name="aubo_host" default="192.168.1.102"/>
+    <arg name="aubo_host" default="192.168.1.101"/>
     <arg name="aubo_port" default="8899"/>
 
     <!-- ui ip和port -->
@@ -30,6 +30,20 @@
         <param name="aubo_port" type="int" value="$(arg aubo_port)"/>
     </node>
 
+    <!-- kinect2 相机节点 -->
+    <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch" />
 
+    <!-- 大环控制节点 -->
+    <include file="$(find dh_hand_driver)/launch/dh_hand_controller.launch" />
+
+    <!-- 盒子定位节点 -->
+    <node pkg="lab_vision" type="box_locator_node.py" name="box_locator">
+    </node>
+
+    <!-- aubo 控制节点 -->
+    <node pkg="aubo_ctrl" type="aubo_ctrl_node" name="aubo_ctrl">
+        <param name="aubo_host" type="str" value="$(arg aubo_host)"/>
+        <param name="aubo_port" type="int" value="$(arg aubo_port)"/>
+    </node>
 
 </launch>

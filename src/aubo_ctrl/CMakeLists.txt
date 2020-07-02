@@ -2,20 +2,32 @@ cmake_minimum_required(VERSION 3.0.2)
 project(aubo_ctrl)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  rosmsg
-  rospy
-)
+        roscpp
+        rosmsg
+        rospy
+        itheima_msgs
+        actionlib
+        actionlib_msgs
+        dh_hand_driver
+        )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+set(PREBUILT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+find_package(AuBo REQUIRED)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -lpthread -Wl,--no-as-needed  -g3 -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
+find_package(OpenCV REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -103,10 +115,10 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES aubo_ctrl
-#  CATKIN_DEPENDS roscpp rosmsg rospy
-#  DEPENDS system_lib
+        #  INCLUDE_DIRS include
+        #  LIBRARIES aubo_ctrl
+        #  CATKIN_DEPENDS roscpp rosmsg rospy
+        #  DEPENDS system_lib
 )
 
 ###########
@@ -116,9 +128,18 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
+        # include
+        ${catkin_INCLUDE_DIRS}
+        ${OpenCV_INCLUDE_DIRS}
+        ${AuBo_INCLUDE_DIRS}
+        src/aubo
+        src/utils
+        /usr/include/eigen3
 )
+
+link_directories(${AuBo_LINK_DIRS})
+
+add_subdirectory(src/utils)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -134,7 +155,11 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/aubo_ctrl_node.cpp)
+add_executable(aubo_ctrl_node src/audo_ctrl_node.cpp src/aubo/Robot.cpp src/aubo/util.cpp)
 
+add_executable(test_blanding src/test_blanding.cpp)
+
+add_executable(test_dh_gripper src/test_dh_gripper.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -149,6 +174,23 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+target_link_libraries(
+        aubo_ctrl_node
+        ${catkin_LIBRARIES}
+        ${AuBo_LIBRARIES}
+        ${OpenCV_LIBRARIES}
+        common_utils
+)
+
+target_link_libraries(
+        test_blanding
+        ${catkin_LIBRARIES}
+)
+
+target_link_libraries(
+        test_dh_gripper
+        ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##

@@ -6,24 +6,23 @@ import threading
 
 
 class AssemblyDevice:
-    _config_start = {
+    _config_stop = {
         4: b'\xf3',
         3: b'\xf4',
         2: b'\xf5',
         1: b'\xf6'
     }
 
-    _config_stop = {
+    _config_start = {
         4: b'\x03',
         3: b'\x04',
         2: b'\x05',
         1: b'\x06'
     }
 
-    _config_ir = {
-        b'\xa7': 0,
-        b'\xa8': 1
-    }
+    _config_ir = [
+        0xa7, 0xa8
+    ]
 
     def __init__(self, host, port):
         self.host = host
@@ -47,8 +46,9 @@ class AssemblyDevice:
             print e
 
     def disconnect(self):
-        self.client.close()
         self.is_running = False
+        self.stop_all()
+        self.client.close()
 
     def _sync_states(self):
         thread = threading.Thread(target=self._do_recv_states)
@@ -59,8 +59,14 @@ class AssemblyDevice:
             buffer = self.client.recv(1)
             buffer = bytearray(buffer)
 
-            index = AssemblyDevice._config_ir[buffer[0]]
-            self.ir_states[index] = True
+            print hex(buffer[0])
+
+            if buffer[0] == AssemblyDevice._config_ir[0]:
+                self.ir_states[0] = True
+                print "0"
+            elif buffer[0] == AssemblyDevice._config_ir[1]:
+                self.ir_states[1] = True
+                print "1"
 
     def start(self, index):
         if index not in [1, 2, 3, 4]: return False
@@ -94,7 +100,7 @@ class AssemblyDevice:
 
     def start_all(self):
         try:
-            data = b'\xff'
+            data = b'\x00'
             self.client.send(data)
 
             self.line_states = [True, True, True, True]
@@ -106,7 +112,7 @@ class AssemblyDevice:
 
     def stop_all(self):
         try:
-            data = b'\x00'
+            data = b'\xff'
             self.client.send(data)
 
             self.line_states = [False, False, False, False]
