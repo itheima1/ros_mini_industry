@@ -237,19 +237,20 @@ void Robot::SetGlobalMoveEndMaxParams() {
     robotService.robotServiceSetGlobalMoveEndMaxLineAcc(0.5);   // max 2米每秒方
     //设置最大速度
 //    robotService.robotServiceSetGlobalMoveEndMaxLineVelc(0.5);// max 2m/s
-    robotService.robotServiceSetGlobalMoveEndMaxLineVelc(0.2);// max 2m/s
+    robotService.robotServiceSetGlobalMoveEndMaxLineVelc(0.4);// max 2m/s
 }
 void Robot::SetGlobalMoveJointMaxParams() {
     //关节型运动最大的加速度
     aubo_robot_namespace::JointVelcAccParam jointMaxAcc;
-    jointMaxAcc.jointPara[0] = 50.0 / 180.0 * M_PI;
-    jointMaxAcc.jointPara[1] = 50.0 / 180.0 * M_PI;
-    jointMaxAcc.jointPara[2] = 50.0 / 180.0 * M_PI;
-    jointMaxAcc.jointPara[3] = 50.0 / 180.0 * M_PI;
-    jointMaxAcc.jointPara[4] = 50.0 / 180.0 * M_PI;
-    jointMaxAcc.jointPara[5] = 50.0 / 180.0 * M_PI;   //接口要求单位是弧度
+    double maxJointAcc = 50.0;
+    jointMaxAcc.jointPara[0] = maxJointAcc / 180.0 * M_PI;
+    jointMaxAcc.jointPara[1] = maxJointAcc / 180.0 * M_PI;
+    jointMaxAcc.jointPara[2] = maxJointAcc / 180.0 * M_PI;
+    jointMaxAcc.jointPara[3] = maxJointAcc / 180.0 * M_PI;
+    jointMaxAcc.jointPara[4] = maxJointAcc / 180.0 * M_PI;
+    jointMaxAcc.jointPara[5] = maxJointAcc / 180.0 * M_PI;   //接口要求单位是弧度
 
-    double maxJointVelc = 30.0;
+    double maxJointVelc = 70.0;
     //关节型运动最大的速度
     aubo_robot_namespace::JointVelcAccParam jointMaxVelc;
     jointMaxVelc.jointPara[0] = maxJointVelc / 180.0 * M_PI;

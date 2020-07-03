@@ -197,7 +197,6 @@ void do_blanking(ServerGoalHandle &handle) {
     // 取出外参Tc，转成4x4齐次矩阵 ---------------------------------------- ③
 
     // 取出盒子位姿T1，转成4x4齐次矩阵 ------------------------------------- ②
-//    Mat templateMat = getTemplateMat();
     // 用二维坐标构建三维位姿
     // [463, 201], [ -14, -100]
     Mat box2CameraMat = getBoxMat(center, vect_x, 950);
@@ -206,7 +205,7 @@ void do_blanking(ServerGoalHandle &handle) {
 //    double tool_x = 0, tool_y = 0, tool_z = 80;
     double tool_x = 0, tool_y = 0, tool_z = 170;//大环夹爪
     Mat_<double> toolMat = (Mat_<double>(4, 4) <<
-                                               1, 0, 0, tool_x / 1000,
+            1, 0, 0, tool_x / 1000,
             0, 1, 0, tool_y / 1000,
             0, 0, 1, tool_z / 1000,
             0, 0, 0, 1
@@ -219,10 +218,10 @@ void do_blanking(ServerGoalHandle &handle) {
 
     double *pos = convert2pose(finalMat);
 
-    // ----------------------------------定义z后退5cm的位置
+    // ----------------------------------定义z后退12cm的位置
     Mat_<double> toolMatUp;
     toolMat.copyTo(toolMatUp);
-    toolMatUp.at<double>(2, 3) += 0.05f; // z增加5cm
+    toolMatUp.at<double>(2, 3) += 0.12f; // z增加12cm
     const Mat &toolMatUpInv = homogeneousInverse(toolMatUp);
     Mat_<double> finalMatUp = exMat * box2CameraMat * toolMatUpInv;
     double *posUp = convert2pose(finalMatUp);
@@ -251,9 +250,9 @@ void do_blanking(ServerGoalHandle &handle) {
     // 再MoveL下降放到正确位置（抓取）
     rst = Robot::getInstance()->moveL(pos, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {
-        cerr << "移动到位失败" << endl;
+        cerr << "moveL下降到位失败" << endl;
 
-        result.result = "移动到位失败";
+        result.result = "moveL下降到位失败";
         handle.setAborted(result);
 
         return;
@@ -265,25 +264,89 @@ void do_blanking(ServerGoalHandle &handle) {
     // 后MoveL上升到12cm位置
     rst = Robot::getInstance()->moveL(posUp, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {
-        cerr << "回到上方失败" << endl;
+        cerr << "moveL回到上方失败" << endl;
 
-        result.result = "回到上方失败";
+        result.result = "moveL回到上方失败";
         handle.setAborted(result);
 
         return;
     }
 
-    // MoveJ到目标位置（释放）
-    rst = Robot::getInstance()->moveJ(jointParam.jointPos, true);
+    // TODO: 判断目标位置是否是空着的，非空的话，换个位置
+
+    std::vector<int> targetCenter = {720, 170};
+    std::vector<int> targetVectorX = {100, 0};
+    // 构建目标位置位姿
+    Mat target2camera = getBoxMat(targetCenter, targetVectorX, 1100);
+
+    Mat targetMatUp = exMat * target2camera * toolMatUpInv;
+    double *targetPoseUp = convert2pose(targetMatUp);
+
+    // 先MoveJ到桌子高处，以避免碰撞
+    double agvAboveAngles[6] = {
+             -9.263 * DE2RA,
+             12.880 * DE2RA,
+            -35.598 * DE2RA,
+             34.058 * DE2RA,
+            -90.864 * DE2RA,
+            -66.888 * DE2RA
+    };
+    rst = Robot::getInstance()->moveJ(agvAboveAngles, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {
-        cerr << "回到初始位置失败" << endl;
-
-        result.result = "回到初始位置失败";
+        cerr << "MoveJ到桌子高处，以避免碰撞" << endl;
+        result.result = "MoveJ到桌子高处，以避免碰撞";
         handle.setAborted(result);
-
         return;
     }
-    // TODO:
+
+    // MoveJ到目标位置（目标位置上方）
+    rst = Robot::getInstance()->moveJwithPose(targetPoseUp, true);
+    if (rst != aubo_robot_namespace::ErrnoSucc) {
+        cerr << "MoveJ到目标位置上方失败" << endl;
+        result.result = "MoveJ到目标位置上方失败";
+        handle.setAborted(result);
+        return;
+    }
+
+    // MoveL下降到目标位置
+    Mat targetMat = exMat * target2camera * toolMatInv;
+    double *targetPose = convert2pose(targetMat);
+    rst = Robot::getInstance()->moveJwithPose(targetPose, true);
+    if (rst != aubo_robot_namespace::ErrnoSucc) {
+        cerr << "MoveL下降到目标位置失败" << endl;
+        result.result = "MoveL下降到目标位置失败";
+        handle.setAborted(result);
+        return;
+    }
+
+    // 打开夹爪，放下盒子
+    open_gripper();
+
+    // MoveL上升到目标位置上方
+    rst = Robot::getInstance()->moveJwithPose(targetPoseUp, true);
+    if (rst != aubo_robot_namespace::ErrnoSucc) {
+        cerr << "MoveL下降到目标位置失败" << endl;
+        result.result = "MoveL下降到目标位置失败";
+        handle.setAborted(result);
+        return;
+    }
+
+    // MoveJ回到待命位置
+    double defaultAngles[6] = {
+               0.516 * DE2RA,
+               -25.956 * DE2RA,
+              -75.008 * DE2RA,
+             38.053 * DE2RA,
+              -92.830 * DE2RA,
+              0.447 * DE2RA
+    };
+    rst = Robot::getInstance()->moveJ(defaultAngles, true);
+    if (rst != aubo_robot_namespace::ErrnoSucc) {
+        cerr << "回到待命位置失败" << endl;
+        result.result = "回到待命位置失败";
+        handle.setAborted(result);
+        return;
+    }
 
     result.result = "成功!";
     handle.setSucceeded();

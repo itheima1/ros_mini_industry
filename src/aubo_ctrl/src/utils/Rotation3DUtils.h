@@ -213,7 +213,7 @@ static void splitHomogeneousMat(Mat &T, Mat &outputRotation, Mat &outputTranslat
  * @param finalMat
  * @return
  */
-double *convert2pose(Mat_<double> &finalMat) {
+double *convert2pose(Mat &finalMat) {
     Mat R = Mat::eye(3, 3, CV_64FC1);
     Mat t = Mat::zeros(3, 1, CV_64FC1);
 
