@@ -11,7 +11,7 @@
     <include file="$(find dh_hand_driver)/launch/dh_hand_controller.launch" />
 
     <!-- 盒子定位节点 -->
-    <node pkg="lab_vision" type="box_locator_node.py" name="box_locator" output="log">
+    <node pkg="lab_vision" type="box_locator_node.py" name="box_locator" output="screen">
     </node>
 
     <!-- aubo 控制节点 -->

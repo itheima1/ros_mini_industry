@@ -1,6 +1,5 @@
-#! /usr/bin/env python
-# coding=utf-8
-
+#!/usr/bin/env python
+# encoding:utf-8
 import cv2
 import numpy as np
 from operator import itemgetter
@@ -39,6 +38,7 @@ def sort_rect(curve):
 def calc_vector_x(rect):
     """
     根据4个点，计算短边向量(朝上)
+    离数值方向最近的作为Y向量
     :param rst: 四个点
     :return: 短边向量
     """
@@ -100,16 +100,20 @@ def find_box(img_masked, img_color_masked, task_str="default"):
                 cv2.putText(img_color_masked, str(j), tuple(rst[j]), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 1,
                             cv2.LINE_AA)
 
-            # center[1] = center[1] + 540
-            print("面积：{}， 边数：{}，中心点：{} x轴：{}".format(area, curve_count, center, vector_x))
+            # print("面积：{}， 边数：{}，中心点：{} x轴：{}".format(area, curve_count, center, vector_x))
 
-            rst_lst.append((center, vector_x))
+            if task_str == "agv":
+                # 小车的y向量可信度高
+                rst_lst.append((center, vector_y))
+            else:
+                # 传送带的x向量可信度高
+                rst_lst.append((center, vector_x))
 
     img_color_masked_half = cv2.resize(img_color_masked, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
     cv2.imshow("img_color_masked-" + task_str, img_color_masked_half )
 
     # 按照x由小到大排序
     rst_lst.sort(key = lambda point: point[0][0])
-    print("共 [{}] 个点： {}".format(len(rst_lst), rst_lst))
+    # print("共 [{}] 个点： {}".format(len(rst_lst), rst_lst))
 
     return rst_lst
