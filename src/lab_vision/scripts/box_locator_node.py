@@ -56,7 +56,7 @@ def find_assembly_line(image):
         approx_curve = cv2.approxPolyDP(cnt, cnt_len * 0.02, True)  # 近似多边形
         curve = approx_curve.shape[0]  # 近似多边形边数
 
-        if area > 50000:
+        if area > 40000:
             print(area, curve)
             rect = cv2.minAreaRect(cnt)
             box = cv2.boxPoints(rect)
@@ -65,7 +65,7 @@ def find_assembly_line(image):
             cv2.drawContours(copy, [box], 0, (0, 0, 255), 2)
             # cv2.drawContours(copy, [approx_curve], 0, (100, 0, 255), 2)
 
-    # cv2.imshow("copy_dst", copy)
+    # cv2.imshow("line_dst", copy)
 
     if box is None:
         print("未发现目标区域")
@@ -127,13 +127,13 @@ def calc_vector_x(rect):
     norm_ad = np.linalg.norm(vector_ad)
 
     if norm_ab < norm_ad:
-        vector_x = vector_ab
-        vector_y = vector_ad
-    else:
         vector_x = vector_ad
         vector_y = vector_ab
+    else:
+        vector_x = vector_ab
+        vector_y = vector_ad
 
-    return (-vector_x, vector_y)
+    return (vector_x, vector_y)
 
 
 
@@ -182,7 +182,6 @@ def find_box(img_masked, img_color_masked):
             center[1] = center[1] + 540
 
             rst_lst.append((center, vector_x))
-    # cv2.imshow("img_color_masked", img_color_masked)
 
     return rst_lst
 
@@ -192,6 +191,9 @@ def image_callback(msg):
 
     global mat
     mat = bridge.imgmsg_to_cv2(msg, "bgr8")
+
+    cv2.imshow("image", mat)
+    cv2.waitKey(10)
 
 
 def box_callback(req):
@@ -211,8 +213,8 @@ def box_callback(req):
     # 在流水线指定区域找盒子
     rst_lst = find_box(img_masked, img_color_masked)
     # 打印盒子列表 [(center, vector_x),(center, vector_x) ...]
-    # cv2.imshow("image", img)
-    # cv2.waitKey(1)
+    # cv2.imshow("image", img_color_masked)
+    # cv2.waitKey(10)
 
     response = GetBoxPosesResponse()
     for item in rst_lst:
@@ -238,3 +240,6 @@ if __name__ == '__main__':
     service = rospy.Service("/box/poses", GetBoxPoses, box_callback)
 
     rospy.spin()
+
+    cv2.destroyAllWindows()
+
