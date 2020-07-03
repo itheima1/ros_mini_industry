@@ -1,0 +1,7 @@
+int32 type
+string name
+---
+string result
+---
+int32 state
+string desc
