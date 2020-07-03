@@ -1,4 +1,4 @@
-set(AuBo_DIR ${PREBUILT_DIR}/aubo_dependents)
+set(AuBo_DIR ~/3rdparty/aubo_dependents)
 
 # 定义头文件路径
 set(AuBo_INCLUDE_DIRS

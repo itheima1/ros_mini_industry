@@ -79,7 +79,7 @@ bool open_gripper() {
 }
 
 bool close_gripper() {
-    return ctrl_gripper(0, 100);
+    return ctrl_gripper(0, 60);
 }
 
 Point3d getCameraXYZ(Point_<int> point, Mat cameraMatrix, double z_distance) {
@@ -121,10 +121,12 @@ Mat getExMat(cv::String exCailFilePath) {
     AngleAxisd angleAxisd(angle, axisMatrix);
     // 获取旋转矩阵
     Matrix3d rotationMatrix = angleAxisd.toRotationMatrix();
-    cout << "旋转矩阵：\n " << angleAxisd.toRotationMatrix() << endl;
     // 获取平移矩阵
     Vector3d translationMatrix(translationX, translationY, translationZ);
     translationMatrix = translationMatrix / 1000;
+
+    cout << "旋转矩阵：\n " << angleAxisd.toRotationMatrix() << endl;
+    cout << "平移向量：\n" << translationMatrix << endl;
 
     Mat_<double> ex_rotationMat(3, 3);
     eigen2cv(rotationMatrix, ex_rotationMat);
@@ -330,10 +332,15 @@ int main(int argc, char **argv) {
     string host = node.param<string>("aubo_host", "192.168.1.101");
     int port = node.param<int>("aubo_port", 8899);
 
+    string pkg_path = node.param<string>("aubo_ctrl_pkg_path", "");
     // 内参文件路径
-    const cv::String inCailFilePath = "/home/xq/assets/calibration_in_params.yml";
+    const cv::String inCailFilePath = pkg_path + "/assets/calibration_in_params.yml";
 // 外参文件路径
-    const cv::String exCailFilePath = "/home/xq/assets/calibration_ex_params_mi.yml";
+    const cv::String exCailFilePath = pkg_path + "/assets/calibration_ex_params_mi.yml";
+
+    std::cout << ">>>> inCailFilePath: " << inCailFilePath << std::endl;
+    std::cout << ">>>> exCailFilePath: " << exCailFilePath << std::endl;
+
     exMat = getExMat(exCailFilePath);
 
     FileStorage fs(inCailFilePath, FileStorage::READ);
@@ -341,9 +348,10 @@ int main(int argc, char **argv) {
     fs["distCoeffs"] >> distCoeffs;
     fs.release();
 
-    char *ip = new char[host.size()];
-    memcpy(&ip[0], &host[0], host.size());
+//    char *ip = new char[host.size()];
+//    memcpy(&ip[0], &host[0], host.size());
 
+    const char *ip = host.c_str();
     int ret = Robot::getInstance()->connect(ip, port);
     if (ret != 0) {
         ROS_ERROR_STREAM("aubo connect failed");
@@ -360,6 +368,8 @@ int main(int argc, char **argv) {
 
     // 开启处理任务的线程
     new thread(do_cb);
+
+    std::cout << "-------------------------------aubo ctrl successful" << std::endl;
 
     ros::waitForShutdown();
     Robot::getInstance()->disConnect();

@@ -23,9 +23,11 @@ Robot *Robot::getInstance() {
 }
 
 //初始化机械臂
-int Robot::connect(char *path, int port) {
+int Robot::connect(const char *path, int port) {
 
     int ret = aubo_robot_namespace::InterfaceCallSuccCode;
+
+    std::cout << ">>>> connect: " <<path << ":" << port << "<<<<" << std::endl;
 
     /** 接口调用: 登录 ***/
     ret = robotService.robotServiceLogin(path, port, "aubo", "123456");

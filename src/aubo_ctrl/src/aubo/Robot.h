@@ -35,7 +35,7 @@ public:
     static CGarbo cGarbo;
 
     //连接
-    int connect(char *path, int port);
+    int connect(const char *path, int port);
 
     //断开连接
     void disConnect();
