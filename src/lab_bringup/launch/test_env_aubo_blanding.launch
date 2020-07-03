@@ -18,6 +18,7 @@
     <node pkg="aubo_ctrl" type="aubo_ctrl_node" name="aubo_ctrl" output="screen">
         <param name="aubo_host" type="str" value="$(arg aubo_host)"/>
         <param name="aubo_port" type="int" value="$(arg aubo_port)"/>
+        <param name="aubo_ctrl_pkg_path" type="str" value="$(find aubo_ctrl)"/>
     </node>
 
 </launch>
