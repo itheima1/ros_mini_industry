@@ -79,7 +79,7 @@ bool open_gripper() {
 }
 
 bool close_gripper() {
-    return ctrl_gripper(0, 60);
+    return ctrl_gripper(30, 60);
 }
 
 Point3d getCameraXYZ(Point_<int> point, Mat cameraMatrix, double z_distance) {
@@ -137,19 +137,33 @@ Mat getExMat(cv::String exCailFilePath) {
     return exMat;
 }
 
-Mat getBoxMat(const vector<int> &center, const vector<int> &vect_x, double z_distance) {// 将二维像素坐标转成三维坐标
+Mat getBoxMat(const vector<int> &center, const vector<int> &vect, double z_distance, bool isFromVectorY = false) {// 将二维像素坐标转成三维坐标
     Point3d point_center = getCameraXYZ(Point2i(center[0], center[1]), cameraMatrix, z_distance);
-    Point3d point_x = getCameraXYZ(Point2i(center[0] + vect_x[0], center[1] + vect_x[1]), cameraMatrix, z_distance);
-    Point3d vector_x = point_x - point_center;
-    // 1.X方向, 并归一化
-    Vector3d xVec(vector_x.x, vector_x.y, vector_x.z);
-    xVec = xVec.normalized();
-    // 2.Z方向
-    Vector3d zVec(0, 0, 1);
+
+    Point3d point_refer = getCameraXYZ(Point2i(center[0] + vect[0], center[1] + vect[1]), cameraMatrix, z_distance);
+    Point3d vector_refer = point_refer - point_center;
+    Vector3d xVec, yVec, zVec = Vector3d(0, 0, 1);
+
+    // Z方向
     zVec = zVec.normalized();
-    // 3.Y方向，通过叉乘Z x X
-    Vector3d yVec = zVec.cross(xVec);
-    yVec = yVec.normalized();
+
+    if (isFromVectorY) {
+        // 1.Y方向， 并归一化
+        yVec = Vector3d(vector_refer.x, vector_refer.y, vector_refer.z);
+        yVec = yVec.normalized();
+        // 2.X方向，通过叉乘Y x Z
+        xVec = yVec.cross(zVec);
+        xVec = xVec.normalized();
+
+    }else {
+        // 1.X方向, 并归一化
+        xVec = Vector3d(vector_refer.x, vector_refer.y, vector_refer.z);
+        xVec = xVec.normalized();
+        // 2.Y方向，通过叉乘Z x X
+        yVec = zVec.cross(xVec);
+        yVec = yVec.normalized();
+    }
+
     // 5.根据三个坐标轴，可以构建一个旋转矩阵，
 
     Mat_<double> box_R_Mat = (Mat_<double>(3, 3)
@@ -163,53 +177,58 @@ Mat getBoxMat(const vector<int> &center, const vector<int> &vect_x, double z_dis
     return box2CameraMat;
 }
 
+// 定义工具位姿 ----------------------------------------------------- ④
+//    double tool_x = 0, tool_y = 0, tool_z = 80;
+double tool_x = 0, tool_y = 0, tool_z = 170;//大环夹爪
+Mat_<double> toolMat = (Mat_<double>(4, 4) <<
+        1, 0, 0, tool_x / 1000,
+        0, 1, 0, tool_y / 1000,
+        0, 0, 1, tool_z / 1000,
+        0, 0, 0, 1
+);
+
 void do_feeding(ServerGoalHandle &handle) {
-
-}
-
-void do_blanking(ServerGoalHandle &handle) {
-    //1. 获取图片，并解析图片，获得位置和姿态信息 TODO:
+    // 上料
+    //1. 获取图片，并解析图片，获得位置和姿态信息
     ros::NodeHandle node;
     ros::ServiceClient client = node.serviceClient<itheima_msgs::GetBoxPoses>("/box/poses");
     client.waitForExistence();
     itheima_msgs::GetBoxPoses service;
     client.call(service);
-    auto poses = service.response.poses;
+    auto agv_poses = service.response.agv_poses;
     client.shutdown();
 
-    if (poses.empty()) {
+    std::cout << "--------------------------------------1" << std::endl;
+    if (agv_poses.empty()) {
+        // 没有盒子
         itheima_msgs::ArmWorkResult result;
-        result.result = "no box checked";
+        result.result = "No box checked";
         handle.setRejected(result);
         return;
     }
+
+    std::cout << "--------------------------------------2" << std::endl;
+    auto first_pose = agv_poses[agv_poses.size() - 1];
+    if (first_pose.type != 0) {
+        // 有盒子但是最右边的不是原料区的盒子
+        itheima_msgs::ArmWorkResult result;
+        result.result = "No source box checked";
+        handle.setRejected(result);
+        return;
+    }
+    std::cout << "--------------------------------------3" << std::endl;
 
     // 激活
     handle.setAccepted();
     itheima_msgs::ArmWorkResult result;
 
-    std::vector<int> center = poses[0].center;
-    std::vector<int> vect_x = poses[0].vector_x;
-
-//    vector<int> center {1244, 775};
-//    vector<int> vect_x {60 ,-82};
-    //2. 机械臂做相应的操作
-    // 取出外参Tc，转成4x4齐次矩阵 ---------------------------------------- ③
+    std::vector<int> center = first_pose.center;
+    std::vector<int> vect = first_pose.vect;
 
     // 取出盒子位姿T1，转成4x4齐次矩阵 ------------------------------------- ②
     // 用二维坐标构建三维位姿
-    // [463, 201], [ -14, -100]
-    Mat box2CameraMat = getBoxMat(center, vect_x, 950);
+    Mat box2CameraMat = getBoxMat(center, vect, 1100, true);
 
-    // 定义工具位姿 ----------------------------------------------------- ④
-//    double tool_x = 0, tool_y = 0, tool_z = 80;
-    double tool_x = 0, tool_y = 0, tool_z = 170;//大环夹爪
-    Mat_<double> toolMat = (Mat_<double>(4, 4) <<
-            1, 0, 0, tool_x / 1000,
-            0, 1, 0, tool_y / 1000,
-            0, 0, 1, tool_z / 1000,
-            0, 0, 0, 1
-    );
     const Mat &toolMatInv = homogeneousInverse(toolMat);
     cout << "exMat:\n" << exMat << endl;
     cout << "box2CameraMat:\n" << box2CameraMat << endl;
@@ -272,12 +291,203 @@ void do_blanking(ServerGoalHandle &handle) {
         return;
     }
 
-    // TODO: 判断目标位置是否是空着的，非空的话，换个位置
+    // 先MoveJ到桌子高处，以避免碰撞
+    double agvAboveAngles[6] = {
+            -9.263 * DE2RA,
+            12.880 * DE2RA,
+            -35.598 * DE2RA,
+            34.058 * DE2RA,
+            -90.864 * DE2RA,
+            -66.888 * DE2RA
+    };
+    rst = Robot::getInstance()->moveJ(agvAboveAngles, true);
+    if (rst != aubo_robot_namespace::ErrnoSucc) {
+        cerr << "MoveJ到桌子高处，以避免碰撞" << endl;
+        result.result = "MoveJ到桌子高处，以避免碰撞";
+        handle.setAborted(result);
+        return;
+    }
 
-    std::vector<int> targetCenter = {720, 170};
+    // 移动到固定的目标位置放置
+    std::vector<int> targetCenter = {1224, 775};
     std::vector<int> targetVectorX = {100, 0};
     // 构建目标位置位姿
-    Mat target2camera = getBoxMat(targetCenter, targetVectorX, 1100);
+    Mat target2camera = getBoxMat(targetCenter, targetVectorX, 950);
+
+    Mat targetMatUp = exMat * target2camera * toolMatUpInv;
+    double *targetPoseUp = convert2pose(targetMatUp);
+
+    // MoveJ到目标位置（目标位置上方）
+    rst = Robot::getInstance()->moveJwithPose(targetPoseUp, true);
+    if (rst != aubo_robot_namespace::ErrnoSucc) {
+        cerr << "MoveJ到目标位置上方失败" << endl;
+        result.result = "MoveJ到目标位置上方失败";
+        handle.setAborted(result);
+        return;
+    }
+
+    // MoveL下降到目标位置
+    Mat targetMat = exMat * target2camera * toolMatInv;
+    double *targetPose = convert2pose(targetMat);
+    rst = Robot::getInstance()->moveJwithPose(targetPose, true);
+    if (rst != aubo_robot_namespace::ErrnoSucc) {
+        cerr << "MoveL下降到目标位置失败" << endl;
+        result.result = "MoveL下降到目标位置失败";
+        handle.setAborted(result);
+        return;
+    }
+
+    // 打开夹爪，放下盒子
+    open_gripper();
+
+    // MoveL上升到目标位置上方
+    rst = Robot::getInstance()->moveJwithPose(targetPoseUp, true);
+    if (rst != aubo_robot_namespace::ErrnoSucc) {
+        cerr << "MoveL下降到目标位置失败" << endl;
+        result.result = "MoveL下降到目标位置失败";
+        handle.setAborted(result);
+        return;
+    }
+
+    // MoveJ回到待命位置
+    double defaultAngles[6] = {
+            0.516 * DE2RA,
+            -25.956 * DE2RA,
+            -75.008 * DE2RA,
+            38.053 * DE2RA,
+            -92.830 * DE2RA,
+            0.447 * DE2RA
+    };
+    rst = Robot::getInstance()->moveJ(defaultAngles, true);
+    if (rst != aubo_robot_namespace::ErrnoSucc) {
+        cerr << "回到待命位置失败" << endl;
+        result.result = "回到待命位置失败";
+        handle.setAborted(result);
+        return;
+    }
+
+    result.result = "成功!";
+    handle.setSucceeded();
+}
+// line_poses: type 0是原料 1是成品
+//  agv_poses: type 0是原料 1是成品
+
+void do_blanking(ServerGoalHandle &handle) {
+    // 下料
+    //1. 获取图片，并解析图片，获得位置和姿态信息
+    ros::NodeHandle node;
+    ros::ServiceClient client = node.serviceClient<itheima_msgs::GetBoxPoses>("/box/poses");
+    client.waitForExistence();
+    itheima_msgs::GetBoxPoses service;
+    client.call(service);
+    auto line_poses = service.response.line_poses;
+    client.shutdown();
+
+    std::cout << "-----------------------------1" << std::endl;
+    if (line_poses.empty()) {
+        // 没有盒子
+        itheima_msgs::ArmWorkResult result;
+        result.result = "No box checked";
+        handle.setRejected(result);
+        return;
+    }
+
+    std::cout << "-----------------------------2" << std::endl;
+    auto first_pose = line_poses[0];
+    if (first_pose.type != 1) {
+        // 有盒子但是最左边的不是产品区的盒子
+        itheima_msgs::ArmWorkResult result;
+        result.result = "No product box checked";
+        handle.setRejected(result);
+        return;
+    }
+
+    std::cout << "-----------------------------3" << std::endl;
+    // 激活
+    handle.setAccepted();
+    itheima_msgs::ArmWorkResult result;
+
+    std::vector<int> center = first_pose.center;
+    std::vector<int> vect = first_pose.vect;
+
+//    vector<int> center {1244, 775};
+//    vector<int> vect_x {60 ,-82};
+    //2. 机械臂做相应的操作
+    // 取出外参Tc，转成4x4齐次矩阵 ---------------------------------------- ③
+
+    // 取出盒子位姿T1，转成4x4齐次矩阵 ------------------------------------- ②
+    // 用二维坐标构建三维位姿
+    // [463, 201], [ -14, -100]
+    Mat box2CameraMat = getBoxMat(center, vect, 950);
+
+    const Mat &toolMatInv = homogeneousInverse(toolMat);
+    cout << "exMat:\n" << exMat << endl;
+    cout << "box2CameraMat:\n" << box2CameraMat << endl;
+    // 测试模板抓取  `⑤ = ③ · ② · inv(④)`
+    Mat_<double> finalMat = exMat * box2CameraMat * toolMatInv;
+
+    double *pos = convert2pose(finalMat);
+
+    // ----------------------------------定义z后退12cm的位置
+    Mat_<double> toolMatUp;
+    toolMat.copyTo(toolMatUp);
+    toolMatUp.at<double>(2, 3) += 0.12f; // z增加12cm
+    const Mat &toolMatUpInv = homogeneousInverse(toolMatUp);
+    Mat_<double> finalMatUp = exMat * box2CameraMat * toolMatUpInv;
+    double *posUp = convert2pose(finalMatUp);
+
+    cout << "x: " << pos[0] << " y: " << pos[1] << " z: " << pos[2];
+    cout << " r: " << pos[3] * RA2DE << " p: " << pos[4] * RA2DE << " y: " << pos[5] * RA2DE << endl;
+
+//    if (true) { return; }
+
+    aubo_robot_namespace::JointParam jointParam;
+    Robot::getInstance()->robotServiceGetJointAngleInfo(jointParam);
+
+    // 先MoveJ移动到上方12cm位置
+    int rst = Robot::getInstance()->moveJwithPose(posUp, true);
+    if (rst != aubo_robot_namespace::ErrnoSucc) {
+        cerr << "移动到上方失败" << endl;
+
+        result.result = "移动到上方失败";
+        handle.setAborted(result);
+
+        return;
+    }
+    // 打开夹爪
+    open_gripper();
+
+    // 再MoveL下降放到正确位置（抓取）
+    rst = Robot::getInstance()->moveL(pos, true);
+    if (rst != aubo_robot_namespace::ErrnoSucc) {
+        cerr << "moveL下降到位失败" << endl;
+
+        result.result = "moveL下降到位失败";
+        handle.setAborted(result);
+
+        return;
+    }
+
+    // 闭合夹爪，夹取盒子
+    close_gripper();
+
+    // 后MoveL上升到12cm位置
+    rst = Robot::getInstance()->moveL(posUp, true);
+    if (rst != aubo_robot_namespace::ErrnoSucc) {
+        cerr << "moveL回到上方失败" << endl;
+
+        result.result = "moveL回到上方失败";
+        handle.setAborted(result);
+
+        return;
+    }
+
+    // TODO: 判断成品目标位置是否是空着的，非空的话，换个位置
+
+    std::vector<int> targetCenter = {460, 180};
+    std::vector<int> targetVectorX = {100, 0};
+    // 构建目标位置位姿
+    Mat target2camera = getBoxMat(targetCenter, targetVectorX, 1095);
 
     Mat targetMatUp = exMat * target2camera * toolMatUpInv;
     double *targetPoseUp = convert2pose(targetMatUp);
@@ -333,12 +543,12 @@ void do_blanking(ServerGoalHandle &handle) {
 
     // MoveJ回到待命位置
     double defaultAngles[6] = {
-               0.516 * DE2RA,
-               -25.956 * DE2RA,
+                0.516 * DE2RA,
+              -25.956 * DE2RA,
               -75.008 * DE2RA,
-             38.053 * DE2RA,
+               38.053 * DE2RA,
               -92.830 * DE2RA,
-              0.447 * DE2RA
+                0.447 * DE2RA
     };
     rst = Robot::getInstance()->moveJ(defaultAngles, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {

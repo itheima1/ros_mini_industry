@@ -1,0 +1,7 @@
+<launch>
+
+    <!-- aubo 控制节点 -->
+    <node pkg="aubo_ctrl" type="test_feeding" name="test_feeding" output="screen">
+    </node>
+
+</launch>

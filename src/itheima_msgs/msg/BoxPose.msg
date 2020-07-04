@@ -1,2 +1,3 @@
 int32[] center
-int32[] vector_x
+int32[] vect
+int32 type

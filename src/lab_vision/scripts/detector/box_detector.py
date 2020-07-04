@@ -43,11 +43,17 @@ def calc_vector_x(rect):
     :return: 短边向量
     """
     vector_ab = rect[1] - rect[0]
-    norm_ab = np.linalg.norm(vector_ab)
     vector_ad = rect[3] - rect[0]
+
+    norm_ab = np.linalg.norm(vector_ab)
     norm_ad = np.linalg.norm(vector_ad)
 
-    if norm_ab < norm_ad:
+    vector_vertical = np.array([0, 1])
+
+    cosangle_ab = vector_ab.dot(vector_vertical) / (np.linalg.norm(norm_ab))
+    cosangle_ad = vector_ad.dot(vector_vertical) / (np.linalg.norm(norm_ad))
+
+    if cosangle_ab > cosangle_ad:
         vector_x = vector_ad
         vector_y = vector_ab
     else:
@@ -104,10 +110,10 @@ def find_box(img_masked, img_color_masked, task_str="default"):
 
             if task_str == "agv":
                 # 小车的y向量可信度高
-                rst_lst.append((center, vector_y))
+                rst_lst.append([center, vector_y])
             else:
                 # 传送带的x向量可信度高
-                rst_lst.append((center, vector_x))
+                rst_lst.append([center, vector_x])
 
     img_color_masked_half = cv2.resize(img_color_masked, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
     cv2.imshow("img_color_masked-" + task_str, img_color_masked_half )

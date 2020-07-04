@@ -28,7 +28,7 @@ void transition_cb(ClientGoalHandle goalHandle) {
             ROS_INFO("client cancel job.");
         } else if (ts == ts.SUCCEEDED) {
             ROS_INFO("server finish job.");
-        } else if(ts == ts.REJECTED) {
+        } else if (ts == ts.REJECTED) {
             ROS_INFO("server rejected job.");
         }
         ROS_INFO_STREAM(goalHandle.getResult()->result);
@@ -44,7 +44,7 @@ void feedback_cb(ClientGoalHandle goalHandle,
 
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "test_blanding");
+    ros::init(argc, argv, "test_feeding");
     ros::NodeHandle node;
 
     ros::AsyncSpinner spinner(2);
@@ -54,10 +54,10 @@ int main(int argc, char **argv) {
     client.waitForActionServerToStart();
 
     itheima_msgs::ArmWorkGoal goal;
-    goal.type = 1;
+    goal.type = 0;
     auto handle = client.sendGoal(goal,
-                    boost::bind(&transition_cb, _1),
-                    boost::bind(&feedback_cb, _1, _2));
+                                         boost::bind(&transition_cb, _1),
+                                         boost::bind(&feedback_cb, _1, _2));
 
 
     ros::waitForShutdown();
