@@ -115,8 +115,6 @@ def find_box(img_masked, img_color_masked, task_str="default"):
                 # 传送带的x向量可信度高
                 rst_lst.append([center, vector_x])
 
-    img_color_masked_half = cv2.resize(img_color_masked, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
-    cv2.imshow("img_color_masked-" + task_str, img_color_masked_half )
 
     # 按照x由小到大排序
     rst_lst.sort(key = lambda point: point[0][0])

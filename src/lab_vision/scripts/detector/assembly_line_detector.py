@@ -3,6 +3,8 @@
 import cv2
 import numpy as np
 from detector.abs_detector import AbsDetector
+from tools.curve_tools import shrink_polygon
+import common.global_ctl as g_ctl
 
 class AssemblyLineDetector(AbsDetector):
 
@@ -65,7 +67,11 @@ class AssemblyLineDetector(AbsDetector):
                 # print("目标区域面积: [{}]，边个数: [{}]".format(area, curve))
                 rect = cv2.minAreaRect(cnt)
                 target_area = cv2.boxPoints(rect)
+
+                # 把这个矩形区域的宽高缩小到90% (切掉边缘)
+                target_area = shrink_polygon(target_area, 0.95)
                 target_area = np.int0(target_area)
+
                 contour = cnt
                 # 绘制逼近曲线
                 cv2.drawContours(copy, [approx_curve], 0, (120, 200, 20), 2)
@@ -73,7 +79,10 @@ class AssemblyLineDetector(AbsDetector):
                 # 绘制最小有向包容盒
                 cv2.drawContours(copy, [target_area], 0, (0, 0, 255), 2)
 
-        # cv2.imshow("copy_dst", copy)
+        if g_ctl.is_debug_mode:
+            copy = cv2.resize(copy, None, fx=0.5, fy=0.5)
+            cv2.imshow("copy_dst_line", copy)
+            cv2.moveWindow("copy_dst_line", 0, 0)
 
         if target_area is None:
             print("未发现目标区域")
@@ -91,8 +100,9 @@ class AssemblyLineDetector(AbsDetector):
 
             img_masked[roi_mask == 0] = [255]
 
-            # roi_mask = dst_img[y: y + h, x: x + w]
-            # cv2.imshow("img_masked", img_masked)
-            return img_masked, img_color_masked
+            # if g_ctl.is_debug_mode:
+                # roi_mask = dst_img[y: y + h, x: x + w]
+                # cv2.imshow("img_masked_line", img_masked)
+            return img_masked, img_color_masked, target_area
 
         return None
