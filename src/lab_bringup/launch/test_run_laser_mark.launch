@@ -1,0 +1,8 @@
+<launch>
+
+    <!-- 测试打标节点 -->
+    <node pkg="laser_mark" type="test_laser_mark.py" name="test_laser_mark" output="screen">
+    </node>
+
+
+</launch>

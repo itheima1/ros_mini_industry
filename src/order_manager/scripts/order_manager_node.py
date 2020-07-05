@@ -59,7 +59,9 @@ def ir_callback(msg):
 
     if msg.ir_2:
         # 任务完成，机械臂开始将产品下架
-        # todo:
+        # 1. 停止传送带4号
+        stop_assembly_line(4)
+        # 2. 下架商品
         pass
 
 

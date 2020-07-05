@@ -1,13 +1,30 @@
 # coding: utf-8
 
-import serial
 import time
 import threading
+import serial
 
 
 class AssemblyDevice:
-    def __init__(self, host, port):
-        self.host = host
+    _config_start = {
+        4: b'\xf3',
+        3: b'\xf4',
+        2: b'\xf5',
+        1: b'\xf6'
+    }
+
+    _config_stop = {
+        4: b'\x03',
+        3: b'\x04',
+        2: b'\x05',
+        1: b'\x06'
+    }
+
+    _config_ir = [
+        0xa7, 0xa8
+    ]
+
+    def __init__(self, port):
         self.port = port
 
         self.is_running = True
@@ -20,115 +37,107 @@ class AssemblyDevice:
 
         self.ser = serial.Serial(port=self.port, baudrate=9600)
 
-    def sync_states(self):
-        thread = threading.Thread(target=self._do_snd_states)
+        self.ir1_timer = threading.Timer(1, self._reset_ir1_state)
+        self.ir2_timer = threading.Timer(1, self._reset_ir2_state)
+
+    def connect(self):
+        try:
+            self._sync_states()
+        except Exception as e:
+            print e
+
+    def disconnect(self):
+        self.is_running = False
+        self.stop_all()
+        self.ser.close()
+
+    def _sync_states(self):
+        thread = threading.Thread(target=self._do_recv_states)
         thread.start()
 
-    def _do_snd_states(self):
-        try:
-            thread = threading.Thread(target=self._do_recv_states, args=(self.ser,))
-            thread.start()
+    def _reset_ir1_state(self):
+        self.ir_states[0] = False
 
-            while self.is_running:
-                # 发送获取流水线状态指令
-                self.ser.write(b'\xFE\x01\x00\x00\x00\x04\x29\xC6')
-                time.sleep(self._rate_time)
+    def _reset_ir2_state(self):
+        self.ir_states[1] = False
 
-                # 发送获取红外状态指令
-                self.ser.write(b'\xFE\x02\x00\x00\x00\x04\x6D\xC6')
-                time.sleep(self._rate_time)
-            self.ser.write(b'\xFE\x01\x00\x00\x00\x04\x29\xC6')
-            time.sleep(self._rate_time)
-            self.ser.write(b'\xFE\x02\x00\x00\x00\x04\x6D\xC6')
-            time.sleep(self._rate_time)
-        except Exception as e:
-            print e
-
-    def _do_recv_states(self, ser):
+    def _do_recv_states(self):
         try:
             while self.is_running:
-                result = ser.read(6)
+                buffer = self.ser.read(1)
 
-                result = bytearray(result)
-
-                if result[1] == 0x01:
-                    # line states
-                    self.line_states = [(result[3] & 0x01) == 0, (result[3] & 0x02) == 0, (result[3] & 0x03) == 0,
-                                        (result[3] & 0x04) == 0]
-                    # print "{} {} {}".format(self.line_states, result[3], "{0:b}".format(result[3]))
-                if result[1] == 0x02:
-                    # ir states
-                    self.ir_states = [result[3] & 0x04, result[3] & 0x02]
+                if len(buffer) == 0:
+                    break
+                # print len(buffer)
+                buffer = bytearray(buffer)
+                print hex(buffer[0])
+                if buffer[0] == AssemblyDevice._config_ir[0]:
+                    print "1 on"
+                    self.ir_states[0] = True
+                    if self.ir1_timer.is_alive():
+                        self.ir1_timer.cancel()
+                        self.ir1_timer = threading.Timer(1, self._reset_ir1_state)
+                    self.ir1_timer.start()
+                elif buffer[0] == AssemblyDevice._config_ir[1]:
+                    print "2 on"
+                    self.ir_states[1] = True
+                    if self.ir2_timer.is_alive():
+                        self.ir2_timer.cancel()
+                        self.ir2_timer = threading.Timer(1, self._reset_ir2_state)
+                    self.ir2_timer.start()
         except Exception as e:
-            print e
-        finally:
             pass
-            # ser.close()
 
     def start(self, index):
-        if index not in [1, 2, 3, 4]: return
+        if index not in [1, 2, 3, 4]: return False
 
         try:
-            data = b'\xFE\x05\x00\x00\x00\x00\xD9\xC5'
-            if index == 2:
-                data = b'\xFE\x05\x00\x01\x00\x00\x88\x05'
-            elif index == 3:
-                data = b'\xFE\x05\x00\x02\x00\x00\x78\x05'
-            elif index == 4:
-                data = b'\xFE\x05\x00\x03\x00\x00\x29\xC5'
-
+            data = AssemblyDevice._config_start[index]
             self.ser.write(data)
+
+            self.line_states[index - 1] = True
+            return True
         except Exception as e:
             print e
 
-        time.sleep(self._wait_time)
-        return self.line_states[index - 1] == True
+        return False
+        # time.sleep(self._wait_time)
+        # return self.line_states[index - 1] == True
 
     def stop(self, index):
-        if index not in [1, 2, 3, 4]: return
+        if index not in [1, 2, 3, 4]: return False
 
         try:
-            data = b'\xFE\x05\x00\x00\xFF\x00\x98\x35'
-            if index == 2:
-                data = b'\xFE\x05\x00\x01\xFF\x00\xC9\xF5'
-            elif index == 3:
-                data = b'\xFE\x05\x00\x02\xFF\x00\x39\xF5'
-            elif index == 4:
-                data = b'\xFE\x05\x00\x03\xFF\x00\x68\x35'
-
+            data = AssemblyDevice._config_stop[index]
             self.ser.write(data)
+
+            self.line_states[index - 1] = False
+            return True
         except Exception as e:
             print e
 
-        time.sleep(self._wait_time)
-        return self.line_states[index - 1] == False
+        return False
 
     def start_all(self):
         try:
-            data = b'\xFE\x0F\x00\x00\x00\x04\x01\x00\x71\x92'
+            data = b'\x00'
             self.ser.write(data)
+
+            self.line_states = [True, True, True, True]
+            return True
         except Exception as e:
             print e
 
-        time.sleep(self._wait_time)
-        result = True
-        for s in self.line_states:
-            if not s:
-                result = False
-                break
-        return result
+        return False
 
     def stop_all(self):
         try:
-            data = b'\xFE\x0F\x00\x00\x00\x04\x01\xFF\x31\xD2'
+            data = b'\xff'
             self.ser.write(data)
+
+            self.line_states = [False, False, False, False]
+            return True
         except Exception as e:
             print e
 
-        time.sleep(self._wait_time)
-        result = True
-        for s in self.line_states:
-            if s:
-                result = False
-                break
-        return result
+        return False

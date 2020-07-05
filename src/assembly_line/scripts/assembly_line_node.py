@@ -5,7 +5,8 @@ import rospy
 from itheima_msgs.srv import AssemblyLineCtrl, AssemblyLineCtrlRequest, AssemblyLineCtrlResponse
 from itheima_msgs.msg import AssemblyIR, AssemblyLine
 
-from driver import AssemblyDevice
+# from driver import AssemblyDevice
+from driver_ser import AssemblyDevice
 import sys
 
 
@@ -72,9 +73,9 @@ if __name__ == '__main__':
 
     # host = rospy.get_param("assembly_host", "10.10.100.254")
     host = rospy.get_param("~assembly_host", "192.168.1.104")
-    port = rospy.get_param("~assembly_port", 5566)
+    # port = rospy.get_param("~assembly_port", 5566)
 
-    # port = "/dev/ttyUSB0"
+    port = "/dev/ttyUSB0"
 
     # 创建服务
     service = rospy.Service("/assembly/line_ctrl", AssemblyLineCtrl, callback)
@@ -87,7 +88,8 @@ if __name__ == '__main__':
 
 
     # 默认关闭所有的设备
-    ad = AssemblyDevice(host, port)
+    # ad = AssemblyDevice(host, port)
+    ad = AssemblyDevice(port)
     ad.connect()
     ad.stop_all()
 
@@ -99,14 +101,21 @@ if __name__ == '__main__':
         line_states = ad.line_states
         ir_states = ad.ir_states
         # print ir_states
-        if ir_states[0] != ir_1 or ir_states[1] != ir_2:
-            ir_1 = ir_states[0]
-            ir_2 = ir_states[1]
+        # if ir_states[0] != ir_1 or ir_states[1] != ir_2:
+        #     ir_1 = ir_states[0]
+        #     ir_2 = ir_states[1]
+        #
+        #     msg = AssemblyIR()
+        #     msg.ir_1 = ir_1
+        #     msg.ir_2 = ir_2
+        #     ir_publisher.publish(msg)
+        ir_1 = ir_states[0]
+        ir_2 = ir_states[1]
 
-            msg = AssemblyIR()
-            msg.ir_1 = ir_1
-            msg.ir_2 = ir_2
-            ir_publisher.publish(msg)
+        msg = AssemblyIR()
+        msg.ir_1 = ir_1
+        msg.ir_2 = ir_2
+        ir_publisher.publish(msg)
 
         # if line_states[0] != line_status[1] or \
         #         line_states[1] != line_status[2] or \
@@ -117,6 +126,4 @@ if __name__ == '__main__':
         rate.sleep()
 
     ad.disconnect()
-    print "exit"
-    rospy.signal_shutdown("")
     sys.exit(0)

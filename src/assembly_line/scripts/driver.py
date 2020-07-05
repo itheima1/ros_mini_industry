@@ -6,14 +6,14 @@ import threading
 
 
 class AssemblyDevice:
-    _config_stop = {
+    _config_start = {
         4: b'\xf3',
         3: b'\xf4',
         2: b'\xf5',
         1: b'\xf6'
     }
 
-    _config_start = {
+    _config_stop = {
         4: b'\x03',
         3: b'\x04',
         2: b'\x05',
@@ -38,6 +38,9 @@ class AssemblyDevice:
 
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+        self.ir1_timer = threading.Timer(1, self._reset_ir1_state)
+        self.ir2_timer = threading.Timer(1, self._reset_ir2_state)
+
     def connect(self):
         try:
             self.client.connect((self.host, self.port))
@@ -54,19 +57,38 @@ class AssemblyDevice:
         thread = threading.Thread(target=self._do_recv_states)
         thread.start()
 
+    def _reset_ir1_state(self):
+        self.ir_states[0] = False
+
+    def _reset_ir2_state(self):
+        self.ir_states[1] = False
+
     def _do_recv_states(self):
-        while self.is_running:
-            buffer = self.client.recv(1)
-            buffer = bytearray(buffer)
+        try:
+            while self.is_running:
+                buffer = self.client.recv(1)
 
-            print hex(buffer[0])
-
-            if buffer[0] == AssemblyDevice._config_ir[0]:
-                self.ir_states[0] = True
-                print "0"
-            elif buffer[0] == AssemblyDevice._config_ir[1]:
-                self.ir_states[1] = True
-                print "1"
+                if len(buffer) == 0:
+                    break
+                # print len(buffer)
+                buffer = bytearray(buffer)
+                print hex(buffer[0])
+                if buffer[0] == AssemblyDevice._config_ir[0]:
+                    print "1 on"
+                    self.ir_states[0] = True
+                    if self.ir1_timer.is_alive():
+                        self.ir1_timer.cancel()
+                        self.ir1_timer = threading.Timer(1, self._reset_ir1_state)
+                    self.ir1_timer.start()
+                elif buffer[0] == AssemblyDevice._config_ir[1]:
+                    print "2 on"
+                    self.ir_states[1] = True
+                    if self.ir2_timer.is_alive():
+                        self.ir2_timer.cancel()
+                        self.ir2_timer = threading.Timer(1, self._reset_ir2_state)
+                    self.ir2_timer.start()
+        except Exception as e:
+            pass
 
     def start(self, index):
         if index not in [1, 2, 3, 4]: return False
