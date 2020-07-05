@@ -76,14 +76,14 @@ class DetectorMain:
                                   if box[2] == 0 and (center[0] - radius) < box[0][0] < (center[0] + radius)]
 
                 if len(filter_rst_lst) == 0:
-                    vect_x = x_end - x_start
-                    vect_x = vect_x / np.linalg.norm(vect_x)
-                    assembly_line_box_lst.append([center, tuple(vect_x), 2])
+                    vect_x = (1, 0)
+                    # vect_x = x_end - x_start
+                    # vect_x = vect_x / np.linalg.norm(vect_x)
+                    assembly_line_box_lst.append([center, vect_x, 2])
                     # 此区域目前没盒子，可以放
-                    vect_x = np.int0(vect_x * 60)
                     cv2.circle(img_color_masked, center, radius, (230, 80, 160), 2)
                     cv2.circle(img_color_masked, center, 5, (0,0,255), -1)
-                    cv2.arrowedLine(img_color_masked, center, tuple(center + vect_x),
+                    cv2.arrowedLine(img_color_masked, center, tuple(center + np.array(vect_x) * 60),
                                     (0, 0, 255), 2, cv2.LINE_AA)
                     break
 
@@ -145,11 +145,13 @@ class DetectorMain:
                     center = tuple((pro_area[0] + pro_area[2]) / 2)
                     cv2.circle(agv_img_color_masked, center, 60, (230, 80, 160), 2)
                     cv2.circle(agv_img_color_masked, center, 5, (0,0,255), -1)
-                    vect_y = y_end - y_start
-                    vect_y = vect_y / np.linalg.norm(vect_y)
+                    # vect_y = y_end - y_start
+                    # vect_y = vect_y / np.linalg.norm(vect_y)
+                    # 目前只能传整形数据，就不自己算向量了。
+                    vect_y = (0, 1)
                     agv_box_lst.append([center, tuple(vect_y), 2])
 
-                    cv2.arrowedLine(agv_img_color_masked, center, tuple(center + np.int0(vect_y * 60)),
+                    cv2.arrowedLine(agv_img_color_masked, center, tuple(center + (np.array(vect_x) * 60)),
                                     (0, 255, 0), 2, cv2.LINE_AA)
                     # cv2.fillPoly(agv_img_color_masked, [pro_area], (200,25,100), cv2.LINE_AA)
 
