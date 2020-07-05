@@ -40,21 +40,38 @@ def box_callback(req):
     assembly_line_box_lst = rst_lst[0]
     agv_box_lst = rst_lst[1]
 
+    #  line_poses: type 0是原料 1是成品
+    #   agv_poses: type 0是原料 1是成品
     response = GetBoxPosesResponse()
     for item in assembly_line_box_lst:
         center = item[0]
         vector_x = item[1]
+        type = item[2]
 
         pose = BoxPose()
         pose.center.append(center[0])
         pose.center.append(center[1])
-        pose.vector_x.append(vector_x[0])
-        pose.vector_x.append(vector_x[1])
+        pose.vect.append(vector_x[0])
+        pose.vect.append(vector_x[1])
+        pose.type = type
 
-        response.poses.append(pose)
+        response.line_poses.append(pose)
+
+    for item in agv_box_lst:
+        center = item[0]
+        vector_y = item[1]
+        type = item[2]
+
+        pose = BoxPose()
+        pose.center.append(center[0])
+        pose.center.append(center[1])
+        pose.vect.append(vector_y[0])
+        pose.vect.append(vector_y[1])
+        pose.type = type
+
+        response.agv_poses.append(pose)
 
     return response
-
 
 
 if __name__ == '__main__':

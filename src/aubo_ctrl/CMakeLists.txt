@@ -159,6 +159,7 @@ add_subdirectory(src/utils)
 add_executable(aubo_ctrl_node src/audo_ctrl_node.cpp src/aubo/Robot.cpp src/aubo/util.cpp)
 
 add_executable(test_blanding src/test_blanding.cpp)
+add_executable(test_feeding src/test_feeding.cpp)
 
 add_executable(test_dh_gripper src/test_dh_gripper.cpp)
 ## Rename C++ executable without prefix
@@ -185,6 +186,10 @@ target_link_libraries(
 
 target_link_libraries(
         test_blanding
+        ${catkin_LIBRARIES}
+)
+target_link_libraries(
+        test_feeding
         ${catkin_LIBRARIES}
 )
 

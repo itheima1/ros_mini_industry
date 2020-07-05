@@ -55,6 +55,13 @@ class DetectorMain:
             agv_box_lst = find_box(agv_img_masked, agv_img_color_masked, "agv")
 
         # 打印盒子列表 [(center, vector_x),(center, vector_x) ...]
+
+        # 把盒子的索引根据当前的绝对位置推算个类型
+        # 组装线 x < 790 , type = 1 成品
+        # 小车线 x < 600 , type = 1 成品
+        assembly_line_box_lst = [ (box[0],box[1], 1 if box[0][0] < 790 else 0) for box in assembly_line_box_lst ]
+        agv_box_lst           = [ (box[0],box[1], 1 if box[0][0] < 600 else 0) for box in           agv_box_lst ]
+
         return assembly_line_box_lst, agv_box_lst
 
     def on_mouse_event(self, event, x, y, flags, param):
