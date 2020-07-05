@@ -151,7 +151,7 @@ class DetectorMain:
                     vect_y = (0, 1)
                     agv_box_lst.append([center, tuple(vect_y), 2])
 
-                    cv2.arrowedLine(agv_img_color_masked, center, tuple(center + (np.array(vect_x) * 60)),
+                    cv2.arrowedLine(agv_img_color_masked, center, tuple(center + (np.array(vect_y) * 60)),
                                     (0, 255, 0), 2, cv2.LINE_AA)
                     # cv2.fillPoly(agv_img_color_masked, [pro_area], (200,25,100), cv2.LINE_AA)
 
