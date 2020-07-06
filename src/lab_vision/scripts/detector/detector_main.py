@@ -19,6 +19,7 @@ from detector.agv_detector import AgvDetector
 from detector.box_detector import find_box
 from common.global_ctl import is_debug_mode
 from tools.curve_tools import get_rect_range
+import common.global_ctl as g_ctl
 
 
 class DetectorMain:
@@ -36,8 +37,6 @@ class DetectorMain:
         self.spliter_percent_in_x_agv = 0.5
 
     def start_find(self, img):
-        if is_debug_mode:
-            cv2.imshow("image", img)
         # img = pic.copy()
         # image = cv2.resize(image, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
         h, w, c = img.shape
@@ -60,9 +59,9 @@ class DetectorMain:
             spliter_in_x_line = self.draw_split_line(img_color_masked, target_area_range, self.spliter_percent_in_x_line)
 
             # 把盒子根据当前的绝对位置推算个类型
-            # 组装线 x < 790 , type=1成品，type=0原材料，type=2上料空位
-            assembly_line_box_lst = [(box[0], box[1], 1 if box[0][0] < spliter_in_x_line else 0)
-                                     for box in assembly_line_box_lst]
+            # 组装线 x < 790 , type=0原材料，type=1成品，type=2上料空位
+            assembly_line_box_lst = [ (box[0], box[1], 1 if box[0][0] < spliter_in_x_line else 0)
+                for box in assembly_line_box_lst]
 
             # 把传送带原材料区的空白位置构建出点和x向量，且type=2
             # 取出竖直方向的中点，在水平方向0.6的位置，设置为上料区
@@ -76,15 +75,15 @@ class DetectorMain:
                                   if box[2] == 0 and (center[0] - radius) < box[0][0] < (center[0] + radius)]
 
                 if len(filter_rst_lst) == 0:
-                    vect_x = (1, 0)
+                    vect_y = (-1, 0)
                     # vect_x = x_end - x_start
                     # vect_x = vect_x / np.linalg.norm(vect_x)
-                    assembly_line_box_lst.append([center, vect_x, 2])
+                    assembly_line_box_lst.append([center, vect_y, 2])
                     # 此区域目前没盒子，可以放
                     cv2.circle(img_color_masked, center, radius, (230, 80, 160), 2)
                     cv2.circle(img_color_masked, center, 5, (0,0,255), -1)
-                    cv2.arrowedLine(img_color_masked, center, tuple(center + np.array(vect_x) * 60),
-                                    (0, 0, 255), 2, cv2.LINE_AA)
+                    cv2.arrowedLine(img_color_masked, center, tuple(center + np.array(vect_y) * 60),
+                                    (0, 255, 0), 2, cv2.LINE_AA)
                     break
 
             else:
@@ -112,7 +111,7 @@ class DetectorMain:
                                                     self.spliter_percent_in_x_agv)
 
             # 把盒子根据当前的绝对位置推算个类型
-            # 小车线 x < 600 , type=1产品， type=0原材料，type=2产品区空位
+            # 小车线 x < 600 , type=0原材料，type=1产品，type=2产品区空位
             agv_box_lst = [(box[0], box[1], 1 if box[0][0] < spliter_in_x_agv else 0)
                            for box in agv_box_lst]
 
@@ -167,6 +166,12 @@ class DetectorMain:
             cv2.imshow("img_color_masked-agv", agv_img_color_masked_half)
             cv2.moveWindow("img_color_masked-agv", 960, 540)
 
+
+        if g_ctl.is_debug_mode:
+            # 中心画一条线，保证在盒子在中心位置附近
+            cv2.line(img, (w / 2, 0), (w / 2, h), (50, 255, 50), 3, cv2.LINE_AA)
+            cv2.line(img, (0, h / 2), (w, h / 2), (50, 50, 255), 3, cv2.LINE_AA)
+            cv2.imshow("image", img)
         # 打印盒子列表 [(center, vector_x),(center, vector_x) ...]
         return assembly_line_box_lst, agv_box_lst
 

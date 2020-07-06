@@ -12,7 +12,7 @@ class AssemblyLineDetector(AbsDetector):
         super(AssemblyLineDetector, self).__init__()
         self.h_min = 40
         self.h_max = 100
-        self.s_min = 83
+        self.s_min = 60 # 教室晚上60, 教室白天83
         self.s_max = 255
         self.v_min = 54
         self.v_max = 255
