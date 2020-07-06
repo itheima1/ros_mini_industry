@@ -7,10 +7,16 @@ import json
 import os
 from playsound import playsound
 
+
 current_dir = os.path.abspath(os.path.dirname(__file__))
 
 
 def update_status_audit(id):
+    # 0: 新建订单
+    # 1: 等待审核
+    # 2: 审核通过，等待生产
+    # 3: 正在生产
+    # 4: 生产完成
     order_update_url = "/order/update"
     order_update_body = "status=1&id={}".format(id)
     conn = httplib.HTTPConnection(host, port)

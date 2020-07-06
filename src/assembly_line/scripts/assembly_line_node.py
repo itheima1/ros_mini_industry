@@ -91,7 +91,7 @@ if __name__ == '__main__':
     # ad = AssemblyDevice(host, port)
     ad = AssemblyDevice(port)
     ad.connect()
-    ad.stop_all()
+    ad.start_all()
 
     # 获取红外数据
     rate = rospy.Rate(10)

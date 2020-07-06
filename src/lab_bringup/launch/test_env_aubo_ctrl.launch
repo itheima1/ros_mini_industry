@@ -7,10 +7,10 @@
     <arg name="catch_depth" default="20.0"/>
 
     <!-- kinect2 相机节点 -->
-    <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch" />
+    <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch"/>
 
     <!-- 大环控制节点 -->
-    <include file="$(find dh_hand_driver)/launch/dh_hand_controller.launch" />
+    <include file="$(find dh_hand_driver)/launch/dh_hand_controller.launch"/>
 
     <!-- 盒子定位节点 -->
     <node pkg="lab_vision" type="box_locator_node.py" name="box_locator" output="screen">

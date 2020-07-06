@@ -12,11 +12,19 @@
     <arg name="ui_host" default="192.168.1.100"/>
     <arg name="ui_port" default="10008"/>
 
+    <!-- laser ip和port -->
+    <arg name="laser_host" default="192.168.1.10"/>
+    <arg name="laser_port" default="8899"/>
+
+    <!-- web ip和port -->
+    <arg name="web_host" default="127.0.0.1"/>
+    <arg name="web_port" default="3000"/>
+
     <!-- ui 同步节点 -->
-    <node pkg="ui_sync" type="ui_sync_node.py" name="ui_sync">
-        <param name="ui_host" type="str" value="$(arg ui_host)"/>
-        <param name="ui_port" type="int" value="$(arg ui_port)"/>
-    </node>
+<!--     <node pkg="ui_sync" type="ui_sync_node.py" name="ui_sync"> -->
+<!--         <param name="ui_host" type="str" value="$(arg ui_host)"/> -->
+<!--         <param name="ui_port" type="int" value="$(arg ui_port)"/> -->
+<!--     </node> -->
 
     <!-- 流水线节点 -->
     <node pkg="assembly_line" type="assembly_line_node.py" name="assembly_line">
@@ -25,16 +33,27 @@
     </node>
 
     <!-- aubo ui 同步节点 -->
-    <node pkg="aubo_ctrl" type="aubo_state_node.py" name="aubo_state">
-        <param name="aubo_host" type="str" value="$(arg aubo_host)"/>
-        <param name="aubo_port" type="int" value="$(arg aubo_port)"/>
-    </node>
+<!--     <node pkg="aubo_ctrl" type="aubo_state_node.py" name="aubo_state"> -->
+<!--         <param name="aubo_host" type="str" value="$(arg aubo_host)"/> -->
+<!--         <param name="aubo_port" type="int" value="$(arg aubo_port)"/> -->
+<!--     </node> -->
 
     <!-- kinect2 相机节点 -->
     <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch" />
 
     <!-- 大环控制节点 -->
     <include file="$(find dh_hand_driver)/launch/dh_hand_controller.launch" />
+
+    <!-- 相机节点 -->
+    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
+         <param name="video_device" value="/dev/video2" />
+         <param name="image_width" value="640" />
+         <param name="image_height" value="480" />
+         <param name="pixel_format" value="yuyv" />
+         <param name="camera_frame_id" value="usb_cam" />
+         <param name="io_method" value="mmap"/>
+         <remap from="/usb_cam/image_raw" to="/laser/image"/>
+    </node>
 
     <!-- 盒子定位节点 -->
     <node pkg="lab_vision" type="box_locator_node.py" name="box_locator">
@@ -44,6 +63,24 @@
     <node pkg="aubo_ctrl" type="aubo_ctrl_node" name="aubo_ctrl">
         <param name="aubo_host" type="str" value="$(arg aubo_host)"/>
         <param name="aubo_port" type="int" value="$(arg aubo_port)"/>
+    </node>
+
+<!--
+     -->
+<!-- 激光打标节点 --><!--
+
+    <node pkg="laser_mark" type="laser_mark_node.py" name="laser_mark" output="screen">
+    </node>
+ -->
+
+    <!-- 订单管理 -->
+    <node pkg="order_manager" type="order_tip_node.py" name="order_tip" output="screen">
+        <param name="server_host" type="str" value="$(arg web_host)"/>
+        <param name="server_port" type="int" value="$(arg web_port)"/>
+    </node>
+    <node pkg="order_manager" type="order_manager_node.py" name="order_manager" output="screen">
+        <param name="server_host" type="str" value="$(arg web_host)"/>
+        <param name="server_port" type="int" value="$(arg web_port)"/>
     </node>
 
 </launch>
