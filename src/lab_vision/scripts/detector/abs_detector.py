@@ -14,6 +14,10 @@ class AbsDetector(object):
         self.v_max = 255
         self.win_name = ""
 
+    def on_button_click(self, state):
+        print("button click !", state)
+
+
     def init_track_bar(self, name):
         self.win_name = "bin_img-"+ name
         cv2.namedWindow(self.win_name, cv2.WINDOW_AUTOSIZE)

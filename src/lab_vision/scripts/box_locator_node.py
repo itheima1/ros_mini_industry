@@ -12,6 +12,7 @@ from detector import detector_main
 
 from itheima_msgs.srv import GetBoxPoses, GetBoxPosesRequest, GetBoxPosesResponse
 from itheima_msgs.msg import BoxPose
+import common.global_ctl as g_ctl
 
 bridge = CvBridge()
 
@@ -28,8 +29,8 @@ def image_callback(msg):
     rst_lst = detector.start_find(img)
 
     # print("-----------", cv2.__version__, sys.version)
-    half_mat = cv2.resize(img, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
-    cv2.imshow("image", half_mat)
+    # half_mat = cv2.resize(img, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
+    # cv2.imshow("image", half_mat)
     cv2.waitKey(10)
 
 
@@ -75,14 +76,19 @@ def box_callback(req):
 
 
 if __name__ == '__main__':
+
+
     rospy.init_node("box_locator_node")
 
     subscriber = rospy.Subscriber("/kinect2/hd/image_color", Image, image_callback)
+    # subscriber = rospy.Subscriber("/kinect2/hd/image_color_rect", Image, image_callback)
 
     service = rospy.Service("/box/poses", GetBoxPoses, box_callback)
 
-    detector = detector_main.DetectorMain()
+    g_ctl.update_debug_mode(True)
+    print "debug_mode: ", g_ctl.is_debug_mode
 
+    detector = detector_main.DetectorMain()
 
     rospy.spin()
 

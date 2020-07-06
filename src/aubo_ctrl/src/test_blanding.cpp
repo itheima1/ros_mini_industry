@@ -44,6 +44,8 @@ void feedback_cb(ClientGoalHandle goalHandle,
 
 
 int main(int argc, char **argv) {
+    setlocale(LC_ALL, "");
+
     ros::init(argc, argv, "test_blanding");
     ros::NodeHandle node;
 

@@ -93,6 +93,11 @@ def find_box(img_masked, img_color_masked, task_str="default"):
             # 对点进行排序
             rst = sort_rect(box)
             vector_x, vector_y = calc_vector_x(rst)
+
+            if task_str == "line":
+                # 调整一下方向
+                vector_x, vector_y = (vector_y, -vector_x)
+
             vector_x = np.int0(vector_x)
             vector_y = np.int0(vector_y)
 
@@ -108,15 +113,10 @@ def find_box(img_masked, img_color_masked, task_str="default"):
 
             # print("面积：{}， 边数：{}，中心点：{} x轴：{}".format(area, curve_count, center, vector_x))
 
-            if task_str == "agv":
-                # 小车的y向量可信度高
-                rst_lst.append([center, vector_y])
-            else:
-                # 传送带的x向量可信度高
-                rst_lst.append([center, vector_x])
+            # 小车上盒子的中心x值可信度高， 所以y方向水平向下
+            # 传送带上盒子的中心y值可信度高，所以y方向水平向左
+            rst_lst.append([center, vector_y])
 
-    img_color_masked_half = cv2.resize(img_color_masked, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
-    cv2.imshow("img_color_masked-" + task_str, img_color_masked_half )
 
     # 按照x由小到大排序
     rst_lst.sort(key = lambda point: point[0][0])

@@ -3,6 +3,8 @@
     <!-- aubo ip和port -->
     <arg name="aubo_host" default="192.168.1.101"/>
     <arg name="aubo_port" default="8899"/>
+    <arg name="kinect_camera_2_line" default="1072.0"/>
+    <arg name="catch_depth" default="20.0"/>
 
     <!-- kinect2 相机节点 -->
     <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch" />
@@ -18,6 +20,8 @@
     <node pkg="aubo_ctrl" type="aubo_ctrl_node" name="aubo_ctrl" output="screen">
         <param name="aubo_host" type="str" value="$(arg aubo_host)"/>
         <param name="aubo_port" type="int" value="$(arg aubo_port)"/>
+        <param name="kinect_camera_2_line" type="double" value="$(arg kinect_camera_2_line)"/>
+        <param name="catch_depth" type="double" value="$(arg catch_depth)"/>
         <param name="aubo_ctrl_pkg_path" type="str" value="$(find aubo_ctrl)"/>
     </node>
 
