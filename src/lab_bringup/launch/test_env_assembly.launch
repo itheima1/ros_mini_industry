@@ -4,10 +4,8 @@
     <arg name="assembly_host" default="192.168.1.104"/>
     <arg name="assembly_port" default="5566"/>
 
-    <!-- 流水线节点 -->
-    <node pkg="assembly_line" type="assembly_line_node.py" name="assembly_line">
-        <param name="assembly_host" type="str" value="$(arg assembly_host)"/>
-        <param name="assembly_port" type="int" value="$(arg assembly_port)"/>
+    <!-- aubo 控制节点 -->
+    <node pkg="assembly_line" type="assembly_line_node.py" name="assembly_line" output="screen">
     </node>
 
 </launch>

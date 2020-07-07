@@ -1,11 +1,11 @@
 <launch>
 
     <!-- laser ip和port -->
-    <arg name="laser_host" default="192.168.1.10"/>
+    <arg name="laser_host" default="192.168.1.11"/>
     <arg name="laser_port" default="8899"/>
 
     <!-- 相机节点 -->
-    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
+<!--    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
         <param name="video_device" value="/dev/video2" />
         <param name="image_width" value="640" />
         <param name="image_height" value="480" />
@@ -13,10 +13,12 @@
         <param name="camera_frame_id" value="usb_cam" />
         <param name="io_method" value="mmap"/>
         <remap from="/usb_cam/image_raw" to="/laser/image"/>
-      </node>
+      </node>-->
 
     <!-- 激光打标节点 -->
     <node pkg="laser_mark" type="laser_mark_node.py" name="laser_mark" output="screen">
+        <param name="host" type="str" value="$(arg laser_host)"/>
+        <param name="port" type="int" value="$(arg laser_port)"/>
     </node>
 
 </launch>

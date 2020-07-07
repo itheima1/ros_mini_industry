@@ -26,11 +26,13 @@ def cancel_cb(goal_handle):
 def do_work(goal_handle):
     if not isinstance(goal_handle, ServerGoalHandle): return
 
+    goal = goal_handle.get_goal()
+    if not isinstance(goal, LaserMarkGoal):
+        return
+
     goal_handle.set_accepted()
 
-    response = driver.send(id=1, type=1, name="hello")
-    print "get result ========="
-    print response
+    response = driver.send(id=goal.id, type=goal.type, name=goal.name)
 
     result = LaserMarkResult()
     result.result = "success"

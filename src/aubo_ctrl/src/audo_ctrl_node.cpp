@@ -418,7 +418,7 @@ void do_feeding(ServerGoalHandle &handle) {
     }
 
     result.result = "成功!";
-    handle.setSucceeded();
+    handle.setSucceeded(result);
 }
 // line_poses: type 0是原料 1是成品
 //  agv_poses: type 0是原料 1是成品

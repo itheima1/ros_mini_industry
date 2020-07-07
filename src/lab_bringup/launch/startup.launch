@@ -7,13 +7,15 @@
     <!-- aubo ip和port -->
     <arg name="aubo_host" default="192.168.1.101"/>
     <arg name="aubo_port" default="8899"/>
+    <arg name="kinect_camera_2_line" default="1072.0"/>
+    <arg name="catch_depth" default="20.0"/>
 
     <!-- ui ip和port -->
-    <arg name="ui_host" default="192.168.1.100"/>
-    <arg name="ui_port" default="10008"/>
+<!--    <arg name="ui_host" default="192.168.1.100"/>
+    <arg name="ui_port" default="10008"/>-->
 
     <!-- laser ip和port -->
-    <arg name="laser_host" default="192.168.1.10"/>
+    <arg name="laser_host" default="192.168.1.11"/>
     <arg name="laser_port" default="8899"/>
 
     <!-- web ip和port -->
@@ -45,7 +47,7 @@
     <include file="$(find dh_hand_driver)/launch/dh_hand_controller.launch" />
 
     <!-- 相机节点 -->
-    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
+<!--    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
          <param name="video_device" value="/dev/video2" />
          <param name="image_width" value="640" />
          <param name="image_height" value="480" />
@@ -53,7 +55,7 @@
          <param name="camera_frame_id" value="usb_cam" />
          <param name="io_method" value="mmap"/>
          <remap from="/usb_cam/image_raw" to="/laser/image"/>
-    </node>
+    </node>-->
 
     <!-- 盒子定位节点 -->
     <node pkg="lab_vision" type="box_locator_node.py" name="box_locator">
@@ -63,24 +65,25 @@
     <node pkg="aubo_ctrl" type="aubo_ctrl_node" name="aubo_ctrl">
         <param name="aubo_host" type="str" value="$(arg aubo_host)"/>
         <param name="aubo_port" type="int" value="$(arg aubo_port)"/>
+        <param name="kinect_camera_2_line" type="double" value="$(arg kinect_camera_2_line)"/>
+        <param name="catch_depth" type="double" value="$(arg catch_depth)"/>
+        <param name="aubo_ctrl_pkg_path" type="str" value="$(find aubo_ctrl)"/>
     </node>
 
-<!--
-     -->
-<!-- 激光打标节点 --><!--
-
+    <!-- 激光打标节点 -->
     <node pkg="laser_mark" type="laser_mark_node.py" name="laser_mark" output="screen">
+        <param name="host" type="str" value="$(arg laser_host)"/>
+        <param name="port" type="int" value="$(arg laser_port)"/>
     </node>
- -->
 
     <!-- 订单管理 -->
     <node pkg="order_manager" type="order_tip_node.py" name="order_tip" output="screen">
-        <param name="server_host" type="str" value="$(arg web_host)"/>
-        <param name="server_port" type="int" value="$(arg web_port)"/>
+        <param name="service_host" type="str" value="$(arg web_host)"/>
+        <param name="service_port" type="int" value="$(arg web_port)"/>
     </node>
     <node pkg="order_manager" type="order_manager_node.py" name="order_manager" output="screen">
-        <param name="server_host" type="str" value="$(arg web_host)"/>
-        <param name="server_port" type="int" value="$(arg web_port)"/>
+        <param name="service_host" type="str" value="$(arg web_host)"/>
+        <param name="service_port" type="int" value="$(arg web_port)"/>
     </node>
 
 </launch>

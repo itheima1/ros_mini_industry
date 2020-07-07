@@ -101,21 +101,21 @@ if __name__ == '__main__':
         line_states = ad.line_states
         ir_states = ad.ir_states
         # print ir_states
-        # if ir_states[0] != ir_1 or ir_states[1] != ir_2:
-        #     ir_1 = ir_states[0]
-        #     ir_2 = ir_states[1]
-        #
-        #     msg = AssemblyIR()
-        #     msg.ir_1 = ir_1
-        #     msg.ir_2 = ir_2
-        #     ir_publisher.publish(msg)
-        ir_1 = ir_states[0]
-        ir_2 = ir_states[1]
+        if ir_states[0] != ir_1 or ir_states[1] != ir_2:
+            ir_1 = ir_states[0]
+            ir_2 = ir_states[1]
 
-        msg = AssemblyIR()
-        msg.ir_1 = ir_1
-        msg.ir_2 = ir_2
-        ir_publisher.publish(msg)
+            msg = AssemblyIR()
+            msg.ir_1 = ir_1
+            msg.ir_2 = ir_2
+            ir_publisher.publish(msg)
+        # ir_1 = ir_states[0]
+        # ir_2 = ir_states[1]
+        #
+        # msg = AssemblyIR()
+        # msg.ir_1 = ir_1
+        # msg.ir_2 = ir_2
+        # ir_publisher.publish(msg)
 
         # if line_states[0] != line_status[1] or \
         #         line_states[1] != line_status[2] or \
