@@ -2,7 +2,7 @@
 # encoding:utf-8
 import cv2
 import numpy as np
-from detector.abs_detector import AbsDetector
+from common.abs_detector import AbsDetector
 from tools.curve_tools import shrink_polygon
 import common.global_ctl as g_ctl
 
@@ -28,10 +28,10 @@ class AgvDetector(AbsDetector):
         mask = cv2.inRange(hsv,  (self.h_min, self.s_min, self.v_min),
                                  (self.h_max, self.s_max, self.v_max))
 
-        track_bar_name = self.get_track_bar_name()
-        if track_bar_name:
+        win_name = self.get_win_name()
+        if win_name:
             tmp_mask = cv2.resize(mask, None, fx=0.5, fy=0.5)
-            cv2.imshow(track_bar_name, tmp_mask)
+            cv2.imshow(win_name, tmp_mask)
 
         copy = image.copy()
         copy[mask != 0] = [0, 0, 0]

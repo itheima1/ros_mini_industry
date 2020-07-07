@@ -14,12 +14,8 @@ class AbsDetector(object):
         self.v_max = 255
         self.win_name = ""
 
-    def on_button_click(self, state):
-        print("button click !", state)
-
-
     def init_track_bar(self, name):
-        self.win_name = "bin_img-"+ name
+        self.win_name = "mask_img-" + name
         cv2.namedWindow(self.win_name, cv2.WINDOW_AUTOSIZE)
         cv2.createTrackbar("h_min:", self.win_name, self.h_min, 255, lambda x: self.update_hsv_args("h_min", x))
         cv2.createTrackbar("h_max:", self.win_name, self.h_max, 255, lambda x: self.update_hsv_args("h_max", x))
@@ -28,8 +24,11 @@ class AbsDetector(object):
         cv2.createTrackbar("v_min:", self.win_name, self.v_min, 255, lambda x: self.update_hsv_args("v_min", x))
         cv2.createTrackbar("v_max:", self.win_name, self.v_max, 255, lambda x: self.update_hsv_args("v_max", x))
 
-    def get_track_bar_name(self):
+    def get_win_name(self):
         return self.win_name
+
+    def get_trackbar_pos(self, track_bar_name):
+        return cv2.getTrackbarPos(track_bar_name, self.get_win_name())
 
     def detect(self, image):
         raise NotImplementedError

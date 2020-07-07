@@ -1,0 +1,9 @@
+<launch>
+
+    <!--    rosrun image_view image_view image:=/camera/image_raw-->
+    <node pkg="image_view" type="image_view" name="image_view" output="screen">
+        <remap from="/image" to="/usb_cam/image_raw"/>
+<!--        <param name="image" value="/camera/image_raw" />-->
+        <param name="autosize" value="true" />
+    </node>
+</launch>

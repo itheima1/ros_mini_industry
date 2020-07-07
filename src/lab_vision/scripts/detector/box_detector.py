@@ -76,8 +76,8 @@ def find_box(img_masked, img_color_masked, task_str="default"):
         cnt_len = cv2.arcLength(cnt, True)  # 周长
         approx_curve = cv2.approxPolyDP(cnt, cnt_len * 0.02, True)  # 近似多边形
         curve_count = approx_curve.shape[0]  # 近似多边形边数
-
         if (5000 < area < 15000) and cv2.isContourConvex(approx_curve):
+            # print "---------------------area: ",area
             rect = cv2.minAreaRect(cnt)
             box = cv2.boxPoints(rect)
             box = np.int0(box)
