@@ -3,11 +3,10 @@
 import cv2
 import numpy as np
 
-
 class LaserRectLocator(object):
 
     def __init__(self):
-        self.threshold = 150
+        self.threshold = 200
         self.win_name = "LaserRectLocator"
         cv2.namedWindow(self.win_name, cv2.WINDOW_AUTOSIZE)
         cv2.createTrackbar("threshold:", self.win_name, self.threshold, 255, lambda x: self.update_args("threshold", x))
@@ -26,17 +25,22 @@ class LaserRectLocator(object):
 
         copy_image = image.copy()
 
+        # 只取中间的区域进行判断，以节省时间
+
         gray = cv2.cvtColor(copy_image, cv2.COLOR_BGR2GRAY)
-        ret, binary = cv2.threshold(gray, self.threshold, 255, cv2.THRESH_BINARY)
+
+        # 这里或者用hsv效果也不错
+        # ret, binary = cv2.threshold(gray, self.threshold, 255, cv2.THRESH_BINARY)
+        binary = cv2.adaptiveThreshold(gray, self.threshold, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 5 * 5, 3)
 
         # 把掩膜来个先闭后开，去掉噪声
-        binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, self.kernal)
+        # binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, self.kernal)
 
-        # cv2.imshow(self.win_name, binary)
+        cv2.imshow(self.win_name, binary)
 
-        # 计算最小外接圆
-        _, contours, hierarchy = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        _, contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
+        rst = None
         for i, cnt in enumerate(contours):
             # 绘制原始曲线
             cv2.drawContours(copy_image, contours, i, (255, 0, 0), 2)
@@ -58,7 +62,8 @@ class LaserRectLocator(object):
                 # cv2.circle(copy_image, tuple(np.int0(rect_center)), 4, (0, 0, 255), -1)
                 # cv2.circle(copy_image, tuple(np.int0(rect_center)), 10, (0, 255, 255), 2)
 
-                return target_area, rect_center
+                rst = target_area, rect_center
+                break
 
                 # 计算并绘制适量矩中心
                 # mm = cv2.moments(cnt)
@@ -68,6 +73,6 @@ class LaserRectLocator(object):
                 # cy = mm['m01'] / mm['m00']
                 # cv2.circle(copy_image, (int(cx), int(cy)), 2, (0, 255, 100), -1)
 
+        cv2.imshow("LaserRectLocator-Result", copy_image)
 
-        return None
-        # cv2.imshow("LaserRectLocator-Result", copy_image)
+        return rst

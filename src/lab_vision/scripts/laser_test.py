@@ -37,7 +37,8 @@ def detect_from_camera():
 def detect_from_video():
     # capture = cv2.VideoCapture("/home/ty/Videos/Webcam/2020-07-07-045038.webm")
     # capture = cv2.VideoCapture("/home/ty/Videos/Webcam/2020-07-07-045245.webm")
-    capture = cv2.VideoCapture("/home/ty/Videos/Webcam/2020-07-07-051725.webm")
+    # capture = cv2.VideoCapture("/home/ty/Videos/Webcam/2020-07-07-051725.webm")
+    capture = cv2.VideoCapture("/home/ty/Videos/Webcam/rect.webm")
     if not capture.isOpened():
         print "相机无法打开"
         return
@@ -122,5 +123,5 @@ def detect_from_image_loop():
 
 if __name__ == '__main__':
     # detect_from_camera()
-    # detect_from_video()
-    detect_from_image_loop()
+    detect_from_video()
+    # detect_from_image_loop()
