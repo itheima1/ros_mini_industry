@@ -7,8 +7,7 @@ from locator.locator_main import LocatorMain
 
 
 def detect_from_camera():
-    capture = cv2.VideoCapture(0)
-    # capture = cv2.VideoCapture("/home/ty/Videos/Webcam/2020-07-07-045038.webm")
+    capture = cv2.VideoCapture(2)
     if not capture.isOpened():
         print "相机无法打开"
         return
@@ -38,7 +37,8 @@ def detect_from_video():
     # capture = cv2.VideoCapture("/home/ty/Videos/Webcam/2020-07-07-045038.webm")
     # capture = cv2.VideoCapture("/home/ty/Videos/Webcam/2020-07-07-045245.webm")
     # capture = cv2.VideoCapture("/home/ty/Videos/Webcam/2020-07-07-051725.webm")
-    capture = cv2.VideoCapture("/home/ty/Videos/Webcam/rect.webm")
+    # capture = cv2.VideoCapture("/home/ty/Videos/Webcam/2020-07-07-230541.webm")
+    capture = cv2.VideoCapture("/home/ty/Videos/Webcam/rect2.webm")
     if not capture.isOpened():
         print "相机无法打开"
         return
@@ -48,9 +48,10 @@ def detect_from_video():
 
     totalFrames = capture.get(cv2.CAP_PROP_FRAME_COUNT)
     currentFrames = 0
+    capture.set(cv2.CAP_PROP_POS_FRAMES, currentFrames)
 
+    print "totalFrames: ", totalFrames
     locator = LocatorMain()
-
     try:
         while True:
 
@@ -59,16 +60,19 @@ def detect_from_video():
             rst = locator.run(frame)
             # cv2.imshow("image", frame)
 
-            action = cv2.waitKey(30) & 0xFF
+            action = cv2.waitKey(20) & 0xFF
             if action == ord("q") or action == 27:
                 break
+            elif action == 32:
+                cv2.waitKey(0)
 
             currentFrames += 1
 
             # 循环
-            if currentFrames == totalFrames - 1:
+            if currentFrames >= totalFrames - 5:
+            # if currentFrames >= 20:
                 currentFrames = 0
-                capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                capture.set(cv2.CAP_PROP_POS_FRAMES, currentFrames)
 
     except KeyboardInterrupt:
         print("Ctrl + c 主动停止程序")
@@ -120,6 +124,7 @@ def detect_from_image_loop():
         print("Ctrl + c 主动停止程序")
     finally:
         cv2.destroyAllWindows()
+
 
 if __name__ == '__main__':
     # detect_from_camera()

@@ -3,7 +3,7 @@
 
 import cv2
 import numpy as np
-from tools.curve_tools import shrink_polygon
+from common.curve_tools import shrink_polygon
 
 if __name__ == '__main__':
     img = np.zeros((480, 640, 3), np.uint8)

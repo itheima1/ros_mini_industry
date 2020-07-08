@@ -2,25 +2,7 @@
 # encoding:utf-8
 import cv2
 import numpy as np
-from operator import itemgetter
-
-
-def sort_rect(curve):
-    """
-    对四边形的四个点进行排序
-    :param curve:
-    :return:
-    """
-    # 按照x正序排列
-    rst_x = sorted(curve, key=itemgetter(0))
-    # print(repr(rst_x))
-    # 取x最小的2个，根据y正序列，作为0，1
-    rect_left = sorted(rst_x[:2], key=itemgetter(1))
-    # 把剩余的2个，根据y倒序列，作为3，4
-    rect_right = sorted(rst_x[-2:], key=itemgetter(1), reverse=True)
-    rst = rect_left + rect_right
-    return rst
-
+from common.geometry_util import *
 
 """
 输入： 图片
@@ -33,34 +15,6 @@ def sort_rect(curve):
     中心坐标 (x,y)
     短边向量 (x,y)
 """
-
-
-def calc_vector_x(rect):
-    """
-    根据4个点，计算短边向量(朝上)
-    离数值方向最近的作为Y向量
-    :param rst: 四个点
-    :return: 短边向量
-    """
-    vector_ab = rect[1] - rect[0]
-    vector_ad = rect[3] - rect[0]
-
-    norm_ab = np.linalg.norm(vector_ab)
-    norm_ad = np.linalg.norm(vector_ad)
-
-    vector_vertical = np.array([0, 1])
-
-    cosangle_ab = vector_ab.dot(vector_vertical) / (np.linalg.norm(norm_ab))
-    cosangle_ad = vector_ad.dot(vector_vertical) / (np.linalg.norm(norm_ad))
-
-    if cosangle_ab > cosangle_ad:
-        vector_x = vector_ad
-        vector_y = vector_ab
-    else:
-        vector_x = vector_ab
-        vector_y = vector_ad
-
-    return (vector_x, vector_y)
 
 
 def find_box(img_masked, img_color_masked, task_str="default"):
@@ -92,7 +46,7 @@ def find_box(img_masked, img_color_masked, task_str="default"):
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200, 160, 80), 2, cv2.LINE_AA)
             # 对点进行排序
             rst = sort_rect(box)
-            vector_x, vector_y = calc_vector_x(rst)
+            vector_x, vector_y = calc_vector(rst)
 
             if task_str == "line":
                 # 调整一下方向
@@ -117,9 +71,8 @@ def find_box(img_masked, img_color_masked, task_str="default"):
             # 传送带上盒子的中心y值可信度高，所以y方向水平向左
             rst_lst.append([center, vector_y])
 
-
     # 按照x由小到大排序
-    rst_lst.sort(key = lambda point: point[0][0])
+    rst_lst.sort(key=lambda point: point[0][0])
     # print("共 [{}] 个点： {}".format(len(rst_lst), rst_lst))
 
     return rst_lst

@@ -11,14 +11,17 @@ class BoxLaserLocator(AbsDetector):
         super(BoxLaserLocator, self).__init__()
         self.h_min = 40
         self.h_max = 100
-        self.s_min = 60  # 教室晚上60, 教室白天83
+        self.s_min = 120  # 教室晚上60, 教室白天83,
         self.s_max = 255
         self.v_min = 54
         self.v_max = 255
         self.kernal = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-        # self.init_track_bar("BoxLaserLocator")
+        self.init_track_bar("BoxLaserLocator")
 
     def detect(self, image):
+        if image is None:
+            print "没有获取到图像"
+            return
         img_copy = image.copy()
 
         # 高斯滤波
@@ -54,17 +57,15 @@ class BoxLaserLocator(AbsDetector):
         dst_img = cv2.morphologyEx(mask, cv2.MORPH_OPEN, self.kernal)
         # cv2.imshow("dst_img", dst_img)
 
-        counter = Counter(dst_img.flatten())
-
-        # 计算宽高比，如果是标定矩形或内容面积比例较小，则说明没盒子
-        # print "counter: ", counter
-        target_count = counter[255]
-        other_count = counter[0]
-
-        target_box_percent = (target_count * 1.0) / float(target_count + other_count)
-        print "target_box_percent: " , target_box_percent
-        if target_box_percent < 0.1:
-            return None
+        # counter = Counter(dst_img.flatten())
+        # # 计算宽高比，如果是标定矩形或内容面积比例较小，则说明没盒子
+        # # print "counter: ", counter
+        # target_count = counter[255]
+        # other_count = counter[0]
+        # target_box_percent = (target_count * 1.0) / float(target_count + other_count)
+        # print "target_box_percent: " , target_box_percent
+        # if target_box_percent < 0.1:
+        #     return None
 
         _, contours, hierarchy = cv2.findContours(dst_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -77,7 +78,7 @@ class BoxLaserLocator(AbsDetector):
             curve = approx_curve.shape[0]  # 近似多边形边数
 
             # 绘制原始曲线
-            print("目标区域面积: [{}]，边个数: [{}]".format(area, curve))
+            # print("目标区域面积: [{}]，边个数: [{}]".format(area, curve))
             cv2.drawContours(img_copy, contours, i, (255, 0, 0), 2)
             if 220000 > area > 140000:
                 # 绘制逼近曲线

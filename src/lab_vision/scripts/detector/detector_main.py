@@ -18,7 +18,7 @@ from detector.assembly_line_detector import AssemblyLineDetector
 from detector.agv_detector import AgvDetector
 from detector.box_detector import find_box
 from common.global_ctl import is_debug_mode
-from tools.curve_tools import get_rect_range
+from common.curve_tools import get_rect_range
 import common.global_ctl as g_ctl
 
 

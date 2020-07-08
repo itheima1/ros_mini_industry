@@ -3,7 +3,7 @@
 import cv2
 import numpy as np
 from common.abs_detector import AbsDetector
-from tools.curve_tools import shrink_polygon
+from common.curve_tools import shrink_polygon
 import common.global_ctl as g_ctl
 
 class AgvDetector(AbsDetector):
