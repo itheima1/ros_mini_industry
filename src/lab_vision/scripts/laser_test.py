@@ -43,6 +43,9 @@ def detect_from_video():
         print "相机无法打开"
         return
 
+    # fourcc = cv2.VideoWriter_fourcc('I','4','2','0')
+    # output = cv2.VideoWriter('out.avi',fourcc, 5.0, (1280,960))
+
     capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
 
@@ -51,14 +54,17 @@ def detect_from_video():
     capture.set(cv2.CAP_PROP_POS_FRAMES, currentFrames)
 
     print "totalFrames: ", totalFrames
-    locator = LocatorMain()
+    locator = LocatorMain("../data/usb_camera.yml")
+    # locator.set_writer(output)
     try:
         while True:
 
             _, frame = capture.read()
 
             rst = locator.run(frame)
+
             # cv2.imshow("image", frame)
+            # output.write(result)#写入一帧画面
 
             action = cv2.waitKey(20) & 0xFF
             if action == ord("q") or action == 27:
@@ -81,6 +87,7 @@ def detect_from_video():
     finally:
         capture.release()
         cv2.destroyAllWindows()
+        # output.release()
 
 
 def detect_from_image():

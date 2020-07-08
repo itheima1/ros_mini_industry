@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # encoding:utf-8
 import cv2
-import numpy as np
 from locator.laser_locator import LaserRectLocator
 from locator.box_locator import BoxLaserLocator
 from common.geometry_util import *
@@ -9,9 +8,11 @@ from common.geometry_util import *
 
 class LocatorMain():
 
-    def __init__(self):
+    def __init__(self,camera_info_path):
         self.laser_locator = LaserRectLocator()
         self.box_laser_locator = BoxLaserLocator()
+        self.output_writer = None
+
 
         # 激光中心从传送带到盒子表面的偏移量
         self.offset = np.array([-13.0, 55.0])
@@ -21,8 +22,24 @@ class LocatorMain():
         self.rect_center = None
         self.frame_count = 0
 
-    def run(self, frame):
+        self.depth = 280.0 / 1000.0
 
+        fs = cv2.FileStorage(camera_info_path, cv2.FILE_STORAGE_READ)
+        self.mtx = fs.getNode("cameraMatrix").mat()
+        self.dist = fs.getNode("distCoeffs").mat()
+        print "相机内参", self.mtx
+        print "畸变系数", self.dist
+        fs.release()
+
+    def point_to_3d(self, p):
+        fx, fy = self.mtx[0, 0],self.mtx[1, 1]
+        cx, cy = self.mtx[0, 2],self.mtx[1, 2]
+        z = self.depth
+        x = (p[0] - cx) * z / fx
+        y = (p[1] - cy) * z / fy
+        return [x, y, z]
+
+    def run(self, frame):
         # 尝试定位盒子
         box_rst  = self.box_laser_locator.detect(frame)
 
@@ -101,7 +118,9 @@ class LocatorMain():
 
                 # 然后计算偏移后的预测位置和盒子中点的偏移量 ------------------------------------------   1
                 cv2.arrowedLine(img_show, tuple(np.int0(r_center)), tuple(np.int0(box_center_float)), (255, 0, 0), 2)
-                center_offset = box_center_float - r_center
+
+                # 先把像素转成空间坐标，再计算x, y偏差
+                # center_offset = box_center_float - r_center
                 # 计算激光矩形的旋转角度，然后让偏移向量追加此旋转
 
                 # 计算旋转角度            --------------------------------------------------------- 2
@@ -133,15 +152,25 @@ class LocatorMain():
                 angle_radius = np.arccos(cos_angle)
                 angle_degree = np.rad2deg(angle_radius)
 
+                # 计算三维空间偏移量
+                # 1. 将两个坐标系点、开始和结束点转成3维
+                rst = self.calc_offset(r_center, laser_rect_vector_x, laser_rect_vector_y, box_center)
+                center_offset = rst[:2] * 1000
 
                 print "偏移：[x: {0[0]}, y: {0[1]}], 夹角：{1}".format(center_offset, angle_degree)
-
-
                 # TODO: 最近的一波都记录下来，取一下加权平均数
 
                 # TODO: 将像素单位转成物理单位mm
 
         cv2.imshow("image_final", img_show)
+
+        if self.output_writer is not None:
+            self.output_writer.write(img_show)
+
+        # https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_geometric_transformations/py_geometric_transformations.html?highlight=getrotationmatrix2d
+        # M = cv2.getRotationMatrix2D((cols/2,rows/2),90,1)
+        # M = cv2.getAffineTransform(pts1,pts2)
+        # cv2.warpAffine(img,M,(cols,rows))
 
         if center_offset is None or angle_degree is None:
             return None
@@ -149,3 +178,50 @@ class LocatorMain():
         # 最后返回偏移量(x,y)和旋转角度Θ
         return center_offset, angle_degree
 
+    def calc_offset(self, laser_rect_center, laser_rect_vector_x, laser_rect_vector_y, box_center):
+        laser_rect = np.array([np.int0(laser_rect_center), np.int0(laser_rect_center + laser_rect_vector_x),
+                               np.int0(laser_rect_center + laser_rect_vector_y)])  # center, x, y
+        points = np.array([np.int0(laser_rect_center), box_center])
+        a_array = np.zeros((0, 3))
+        # 2. 构建坐标系
+        for point in laser_rect:
+            c_point = self.point_to_3d(point)
+            a_array = np.row_stack((a_array, c_point))
+        point_array = np.zeros((0, 3))
+        for point in points:
+            c_point = self.point_to_3d(point)
+            point_array = np.row_stack((point_array, c_point))
+        vector_x = a_array[1] - a_array[0]
+        vector_x = vector_x / np.sqrt(np.sum(vector_x ** 2))
+        vector_y = a_array[2] - a_array[0]
+        vector_y = vector_y / np.sqrt(np.sum(vector_y ** 2))
+        vector_z = np.array([0, 0, 1])
+        vector_z = vector_z / np.sqrt(np.sum(vector_z ** 2))
+        R = np.array([
+            [vector_x[0], vector_y[0], vector_z[0]],
+            [vector_x[1], vector_y[1], vector_z[1]],
+            [vector_x[2], vector_y[2], vector_z[2]]
+        ])
+        translation = a_array[0]
+        # transform_a2o = np.eye(4)
+        # transform_a2o[:3, :3] = R
+        # transform_a2o[:3,  3] = translation
+        transform_o2a = np.eye(4)
+        Rt = R.T
+        transform_o2a[:3, :3] = Rt
+        transform_o2a[:3, 3] = - Rt.dot(translation.T)
+        # print point_array
+        # print "R" + "-" * 30
+        # print R
+        # print "a_array " + "-" * 30
+        # print a_array
+        # print "transform_o2a" + "-" * 30
+        # print transform_o2a
+        # 3. 计算偏移的向量，映射到到激光坐标系B
+        # vector = np.hstack(((point_array[1] - point_array[0]), 1))
+        # print vector * 1000
+        rst = transform_o2a.dot(np.hstack((point_array[1], 1))) - transform_o2a.dot(np.hstack((point_array[0], 1)))
+        return rst
+
+    def set_writer(self, output):
+        self.output_writer = output
