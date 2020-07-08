@@ -15,6 +15,8 @@ class LocatorMain():
 
         # 激光中心从传送带到盒子表面的偏移量
         self.offset = np.array([-13.0, 55.0])
+        # 参考的激光缩放比例
+        self.rect_scale_factor = 8.5
         self.laser_rect_area = None
         self.rect_center = None
         self.frame_count = 0
@@ -30,10 +32,9 @@ class LocatorMain():
         cv2.line(img_show, (w / 2, 0), (w / 2, h), (50, 255, 50), 1, cv2.LINE_AA)
         cv2.line(img_show, (0, h / 2), (w, h / 2), (255, 50, 255), 1, cv2.LINE_AA)
 
-        scale_factor = 8.5
         screen_center = (w / 2, h / 2)
-        refer_rect_width  = 100 * 0.2 * scale_factor
-        refer_rect_height = 100 * 0.4 * scale_factor
+        refer_rect_width  = 100 * 0.2 * self.rect_scale_factor
+        refer_rect_height = 100 * 0.4 * self.rect_scale_factor
         # 绘制黄色的矩形框, 要求和目标对齐
         cv2.rectangle(img_show,
                       (int(screen_center[0] - refer_rect_width / 2), int(screen_center[1] - refer_rect_height / 2)),
@@ -57,7 +58,7 @@ class LocatorMain():
 
                 # 绘制中心和圆环
                 cv2.circle(img_show, tuple(np.int0(rect_center)), 4, (0, 0, 255), -1)
-                cv2.circle(img_show, tuple(np.int0(rect_center)), 10, (0, 255, 255), 2)
+                cv2.circle(img_show, tuple(np.int0(rect_center)), 10, (0, 255, 255), 1)
                 points = np.int0(laser_rect_area)
                 # 绘制最小有向包容盒
                 cv2.drawContours(img_show, [points], 0, (0, 255, 255), 2)
@@ -86,10 +87,10 @@ class LocatorMain():
 
                 # 传送带上的中心
                 cv2.circle(img_show, tuple(np.int0(self.rect_center)), 4, (0, 0, 255), -1)
-                cv2.circle(img_show, tuple(np.int0(self.rect_center)), 10, (0, 255, 255), 2)
+                cv2.circle(img_show, tuple(np.int0(self.rect_center)), 10, (0, 255, 255), 1)
                 # 绘制中心和圆环, 盒子上的中心
                 cv2.circle(img_show, tuple(np.int0(r_center)), 3, (0, 0, 255), -1)
-                cv2.circle(img_show, tuple(np.int0(r_center)), 10, (0, 255, 255), 1)
+                cv2.circle(img_show, tuple(np.int0(r_center)), 10, (0, 255, 255), 2)
                 # 箭头
                 cv2.arrowedLine(img_show, tuple(self.rect_center), tuple(np.int0(r_center)), (0, 0, 255), 2)
 
@@ -101,6 +102,7 @@ class LocatorMain():
                 # 然后计算偏移后的预测位置和盒子中点的偏移量 ------------------------------------------   1
                 cv2.arrowedLine(img_show, tuple(np.int0(r_center)), tuple(np.int0(box_center_float)), (255, 0, 0), 2)
                 center_offset = box_center_float - r_center
+                # 计算激光矩形的旋转角度，然后让偏移向量追加此旋转
 
                 # 计算旋转角度            --------------------------------------------------------- 2
                 # 激光预测矩形的四个点 laser_rect_area_offset
@@ -124,7 +126,6 @@ class LocatorMain():
                                 (0, 255, 0), 2, cv2.LINE_AA)
 
                 # 计算Y向量的夹角 laser_rect_vector_y -> target_rect_vector_y
-
                 norm_l = np.linalg.norm(laser_rect_vector_y)
                 norm_t = np.linalg.norm(target_rect_vector_y)
                 cos_angle = laser_rect_vector_y.dot(target_rect_vector_y) / (norm_l * norm_t)
@@ -132,10 +133,13 @@ class LocatorMain():
                 angle_radius = np.arccos(cos_angle)
                 angle_degree = np.rad2deg(angle_radius)
 
-                print "偏移量：{}, 夹角：{}".format(center_offset, angle_degree)
-                # 都记录下来，取一下加权平均数
 
-                # 将像素单位转成物理单位mm
+                print "偏移：[x: {0[0]}, y: {0[1]}], 夹角：{1}".format(center_offset, angle_degree)
+
+
+                # TODO: 最近的一波都记录下来，取一下加权平均数
+
+                # TODO: 将像素单位转成物理单位mm
 
         cv2.imshow("image_final", img_show)
 

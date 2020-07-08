@@ -38,7 +38,7 @@ def detect_from_video():
     # capture = cv2.VideoCapture("/home/ty/Videos/Webcam/2020-07-07-045245.webm")
     # capture = cv2.VideoCapture("/home/ty/Videos/Webcam/2020-07-07-051725.webm")
     # capture = cv2.VideoCapture("/home/ty/Videos/Webcam/2020-07-07-230541.webm")
-    capture = cv2.VideoCapture("/home/ty/Videos/Webcam/rect2.webm")
+    capture = cv2.VideoCapture("./imgs/rect2.webm")
     if not capture.isOpened():
         print "相机无法打开"
         return
