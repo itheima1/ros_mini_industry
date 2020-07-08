@@ -63,6 +63,7 @@ add_service_files(
         FILES
         AssemblyLineCtrl.srv
 		GetBoxPoses.srv
+		GetLaserBoxLocator.srv
 )
 
 ## Generate actions in the 'action' folder

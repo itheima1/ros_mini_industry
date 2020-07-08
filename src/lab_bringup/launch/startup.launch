@@ -47,7 +47,7 @@
     <include file="$(find dh_hand_driver)/launch/dh_hand_controller.launch" />
 
     <!-- 相机节点 -->
-<!--    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
+    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
          <param name="video_device" value="/dev/video2" />
          <param name="image_width" value="640" />
          <param name="image_height" value="480" />
@@ -55,7 +55,7 @@
          <param name="camera_frame_id" value="usb_cam" />
          <param name="io_method" value="mmap"/>
          <remap from="/usb_cam/image_raw" to="/laser/image"/>
-    </node>-->
+    </node>
 
     <!-- 盒子定位节点 -->
     <node pkg="lab_vision" type="box_locator_node.py" name="box_locator">

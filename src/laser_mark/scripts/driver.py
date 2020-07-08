@@ -35,7 +35,6 @@ class LaserDriver:
 
             while self.is_running:
                 buffer = self.client.recv(1024 * 4)
-                print "a"
                 if len(buffer) == 0:
                     break
                 value = buffer.decode("utf-8")
@@ -46,7 +45,6 @@ class LaserDriver:
                     self.task_map[id].put(data)
 
         except Exception as e:
-            print "2 disconnect"
             print e
             self._clear_task_map()
 
@@ -57,7 +55,7 @@ class LaserDriver:
     def disconnect(self):
         self.client.close()
 
-    def send(self, id, type, name):
+    def send(self, id, type, name, offset, degree):
         queue = Queue.Queue()
         self.task_map[id] = queue
 
@@ -65,7 +63,9 @@ class LaserDriver:
         self.client.send(json.dumps({
             "id": id,
             "type": type,
-            "name": name
+            "name": name,
+            "offset": offset,
+            "degree": degree
         }))
 
         # blocking wait

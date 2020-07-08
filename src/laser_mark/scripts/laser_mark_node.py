@@ -9,6 +9,7 @@ import threading
 from actionlib import ServerGoalHandle
 
 from itheima_msgs.msg import LaserMarkAction, LaserMarkGoal, LaserMarkFeedback, LaserMarkResult
+from itheima_msgs.srv import GetLaserBoxLocator, GetLaserBoxLocatorResponse
 from driver import LaserDriver
 
 # 请求队列
@@ -25,14 +26,21 @@ def cancel_cb(goal_handle):
 
 def do_work(goal_handle):
     if not isinstance(goal_handle, ServerGoalHandle): return
-
     goal = goal_handle.get_goal()
     if not isinstance(goal, LaserMarkGoal):
         return
 
-    goal_handle.set_accepted()
+    # 获取偏移位置信息
+    client = rospy.ServiceProxy("/laser/box", GetLaserBoxLocator)
+    response = client.call()
+    if not isinstance(response, GetLaserBoxLocatorResponse):
+        return
+    offset = response.center_offset
+    degree = response.angle_degree
+    client.close()
 
-    response = driver.send(id=goal.id, type=goal.type, name=goal.name)
+    goal_handle.set_accepted()
+    response = driver.send(id=goal.id, type=goal.type, name=goal.name, offset=offset, degree=degree)
 
     result = LaserMarkResult()
     result.result = "success"
