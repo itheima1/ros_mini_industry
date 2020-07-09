@@ -35,12 +35,13 @@ def do_work(goal_handle):
     response = client.call()
     if not isinstance(response, GetLaserBoxLocatorResponse):
         return
-    offset = response.center_offset
+    offset_x = response.center_offset_x
+    offset_y = response.center_offset_y
     degree = response.angle_degree
     client.close()
 
     goal_handle.set_accepted()
-    response = driver.send(id=goal.id, type=goal.type, name=goal.name, offset=offset, degree=degree)
+    response = driver.send(id=goal.id, type=goal.type, name=goal.name, offset_x=offset_x, offset_y=offset_y, degree=degree)
 
     result = LaserMarkResult()
     result.result = "success"

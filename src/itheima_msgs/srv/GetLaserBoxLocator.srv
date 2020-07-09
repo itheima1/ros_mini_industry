@@ -1,3 +1,4 @@
 ---
-float32 center_offset
+float32 center_offset_x
+float32 center_offset_y
 float32 angle_degree
