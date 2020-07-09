@@ -61,7 +61,8 @@ def box_callback(req):
 
     response = GetLaserBoxLocatorResponse()
 
-    response.center_offset = center_offset
+    response.center_offset_x = center_offset[0]
+    response.center_offset_y = center_offset[1]
     response.angle_degree = angle_degree
     return response
 

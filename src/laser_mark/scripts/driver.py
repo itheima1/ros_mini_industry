@@ -55,7 +55,7 @@ class LaserDriver:
     def disconnect(self):
         self.client.close()
 
-    def send(self, id, type, name, offset, degree):
+    def send(self, id, type, name, offset_x, offset_y, degree):
         queue = Queue.Queue()
         self.task_map[id] = queue
 
@@ -64,7 +64,9 @@ class LaserDriver:
             "id": id,
             "type": type,
             "name": name,
-            "offset": offset,
+            "offset": [
+                offset_x, offset_y
+            ],
             "degree": degree
         }))
 
