@@ -28,15 +28,15 @@
 
             <param name="timestamp_method" value="start"/> <!-- start of frame -->
 <!--            <param name="camera_info_url" value="file:///tmp/cam.yaml"/>-->
-
 <!--            <param name="auto_exposure" value="3"/> &lt;!&ndash; use aperture_priority auto exposure &ndash;&gt;-->
 <!--            <param name="auto_white_balance" value="false"/>-->
         </node>
     </group>
 
-<!--    <node pkg="image_view" type="image_view" name="image_view" respawn="false" output="screen">-->
-<!--        <remap from="image" to="/$(arg camera_ns)/image_raw"/>-->
-<!--        &lt;!&ndash;        <param name="image" value="/camera/image_raw" />&ndash;&gt;-->
-<!--        <param name="autosize" value="true" />-->
-<!--    </node>-->
+    <!--    <node pkg="image_view" type="image_view" name="image_view" respawn="false" output="screen">-->
+    <!--        <remap from="image" to="/$(arg camera_ns)/image_raw"/>-->
+    <!--        &lt;!&ndash;        <param name="image" value="/camera/image_raw" />&ndash;&gt;-->
+    <!--        <param name="autosize" value="true" />-->
+    <!--    </node>-->
+
 </launch>

@@ -41,13 +41,23 @@ map<string, bool> canceledIds;
 Mat exMat;
 Mat cameraMatrix, distCoeffs;
 
-float z_up = 0.08f; // 夹取抬起高度
-float catch_depth = 20.0f; // 抓取的深度
+float z_up = 0.12f; // 夹取抬起高度
+float catch_depth = 10.0f; // 抓取的深度
 
 float box_height = 45.0f; // 盒子的高度
 float line2agv = 115.0f; // 传送带到小车的距离
 float line_box_distance_z = 1050.0f - box_height; // 相机距离传送带盒子表面距离
 float avg_box_distance_z  = line_box_distance_z;  // 相机距离AGV车盒子表面距离
+
+// 待命位置
+double defaultAngles[6] = {
+        0.516 * DE2RA,
+        -25.956 * DE2RA,
+        -75.008 * DE2RA,
+        38.053 * DE2RA,
+        -92.830 * DE2RA,
+        0.447 * DE2RA
+};
 
 static Mat_<double> toolMat;
 
@@ -278,8 +288,17 @@ void do_feeding(ServerGoalHandle &handle) {
     aubo_robot_namespace::JointParam jointParam;
     Robot::getInstance()->robotServiceGetJointAngleInfo(jointParam);
 
+
+    int rst = Robot::getInstance()->moveJ(defaultAngles, true);
+    if (rst != aubo_robot_namespace::ErrnoSucc) {
+        cerr << "回到待命位置失败"+ to_string(rst) << endl;
+        result.result = "回到待命位置失败"+ to_string(rst);
+        handle.setAborted(result);
+        return;
+    }
+
     // 先MoveJ移动到上方12cm位置
-    int rst = Robot::getInstance()->moveJwithPose(posUp, true);
+    rst = Robot::getInstance()->moveJwithPose(posUp, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {
         cerr << "移动到上方失败" << endl;
 
@@ -401,14 +420,6 @@ void do_feeding(ServerGoalHandle &handle) {
     }
 
     // MoveJ回到待命位置
-    double defaultAngles[6] = {
-              0.516 * DE2RA,
-            -25.956 * DE2RA,
-            -75.008 * DE2RA,
-             38.053 * DE2RA,
-            -92.830 * DE2RA,
-              0.447 * DE2RA
-    };
     rst = Robot::getInstance()->moveJ(defaultAngles, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {
         cerr << "回到待命位置失败" << endl;
@@ -515,8 +526,16 @@ void do_blanking(ServerGoalHandle &handle) {
     aubo_robot_namespace::JointParam jointParam;
     Robot::getInstance()->robotServiceGetJointAngleInfo(jointParam);
 
+    int rst = Robot::getInstance()->moveJ(defaultAngles, true);
+    if (rst != aubo_robot_namespace::ErrnoSucc) {
+        cerr << "回到待命位置失败"+ to_string(rst) << endl;
+        result.result = "回到待命位置失败"+ to_string(rst);
+        handle.setAborted(result);
+        return;
+    }
+
     // 先MoveJ移动到上方12cm位置
-    int rst = Robot::getInstance()->moveJwithPose(posUp, true);
+    rst = Robot::getInstance()->moveJwithPose(posUp, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {
         cerr << "移动到上方失败" << rst << endl;
 
@@ -610,14 +629,6 @@ void do_blanking(ServerGoalHandle &handle) {
     }
 
     // MoveJ回到待命位置
-    double defaultAngles[6] = {
-                0.516 * DE2RA,
-              -25.956 * DE2RA,
-              -75.008 * DE2RA,
-               38.053 * DE2RA,
-              -92.830 * DE2RA,
-                0.447 * DE2RA
-    };
     rst = Robot::getInstance()->moveJ(defaultAngles, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {
         cerr << "回到待命位置失败"+ to_string(rst) << endl;
@@ -680,7 +691,7 @@ int main(int argc, char **argv) {
     // 相机距离传送带盒子表面距离
     line_box_distance_z = kinect_camera_2_line - box_height;
     // 相机距离AGV车盒子表面距离
-    avg_box_distance_z = line_box_distance_z;
+    avg_box_distance_z = line_box_distance_z - 16.0f;
 
 
 // 定义工具位姿 ----------------------------------------------------- ④
@@ -719,7 +730,8 @@ int main(int argc, char **argv) {
         return -1;
     }
 //    Robot::getInstance()->setOffset(0.0f / 1000.0f, -0.0f / 1000.0f, -0.0f / 1000.0f);
-    Robot::getInstance()->setOffset(12.0f / 1000.0f, 0.0f / 1000.0f, 0.0f / 1000.0f);
+//    Robot::getInstance()->setOffset(0.0f / 1000.0f, 0.0f / 1000.0f, 0.0f / 1000.0f);
+    Robot::getInstance()->setOffset(0.0f / 1000.0f, 0.0f / 1000.0f, 0.0f / 1000.0f);
 
     string actionName = "/aubo/ctrl";
     ActionServer server(node, actionName,

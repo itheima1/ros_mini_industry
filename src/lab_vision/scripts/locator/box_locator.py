@@ -11,11 +11,11 @@ class BoxLaserLocator(AbsDetector):
         super(BoxLaserLocator, self).__init__()
         self.h_min = 40
         self.h_max = 100
-        self.s_min = 120  # 教室晚上60, 教室白天83,
+        self.s_min = 0  # 教室晚上60, 教室白天83,
         self.s_max = 255
         self.v_min = 54
         self.v_max = 255
-        self.kernal = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        self.kernal = cv2.getStructuringElement(cv2.MORPH_RECT, (11, 11))
         self.init_track_bar("BoxLaserLocator")
 
     def detect(self, image):
@@ -25,7 +25,7 @@ class BoxLaserLocator(AbsDetector):
         img_copy = image.copy()
 
         # 高斯滤波
-        img_copy = cv2.GaussianBlur(img_copy, (3, 3), 0)
+        # img_copy = cv2.GaussianBlur(img_copy, (3, 3), 0)
         # 均值迁移滤波
         # img_copy = cv2.pyrMeanShiftFiltering(img_copy, 10, 30)
 
@@ -33,7 +33,7 @@ class BoxLaserLocator(AbsDetector):
         # Diameter 相邻元素直径范围, 可通过sigmaSpace得到, 一般设置为0
         # sigmaColor 颜色空间范围, 值越大, 合并的色调区域越大
         # sigmaSpace 坐标空间范围, 值越大, 合并的像素范围越广, 如果设置了Diameter, 此值无效
-        # img_copy = cv2.bilateralFilter(img_copy, 0, 30, 6)
+        img_copy = cv2.bilateralFilter(img_copy, 0, 30, 4)
 
         # 根据颜色提取目标区域提取正方形区域
         hsv = cv2.cvtColor(img_copy, cv2.COLOR_BGR2HSV)
@@ -56,16 +56,6 @@ class BoxLaserLocator(AbsDetector):
         # 把掩膜来个先闭后开，去掉噪声
         dst_img = cv2.morphologyEx(mask, cv2.MORPH_OPEN, self.kernal)
         # cv2.imshow("dst_img", dst_img)
-
-        # counter = Counter(dst_img.flatten())
-        # # 计算宽高比，如果是标定矩形或内容面积比例较小，则说明没盒子
-        # # print "counter: ", counter
-        # target_count = counter[255]
-        # other_count = counter[0]
-        # target_box_percent = (target_count * 1.0) / float(target_count + other_count)
-        # print "target_box_percent: " , target_box_percent
-        # if target_box_percent < 0.1:
-        #     return None
 
         _, contours, hierarchy = cv2.findContours(dst_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 

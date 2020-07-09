@@ -239,14 +239,13 @@ def ir_callback(msg):
             update_status_producting(item["id"])
             # 1. 停止传送带2号
             stop_assembly_line(2)
-            rospy.sleep(3)
+            rospy.sleep(5)
             # 激光打标机应该开始打标工作
             item["state"] = STATE_PRE_MARK
             mark = start_laser_mark(name=item["name"], id=item["id"], type=item["type"])
             if mark[0]:
                 start_assembly_line(2)
                 item["state"] = STATE_MARKED
-                start_assembly_line(2)
 
                 rospy.loginfo("####### 订单{}, 打标成功 #######".format(item["id"]))
             else:
@@ -276,6 +275,7 @@ def ir_callback(msg):
                 update_status_completed(item["id"])
                 clear_item(item["id"])
             else:
+                start_assembly_line(4)
                 item["state"] = STATE_MARKED
                 rospy.loginfo("####### 订单{}, 下架失败 #########".format(item["id"]))
                 if blanding[1] is not None:
@@ -291,6 +291,11 @@ if __name__ == '__main__':
     port = rospy.get_param("~service_port", 3000)
 
     interval = rospy.get_param("~product_interval", 10)
+
+    start_assembly_line(1)
+    start_assembly_line(2)
+    start_assembly_line(3)
+    start_assembly_line(4)
 
     reinit_order()
 

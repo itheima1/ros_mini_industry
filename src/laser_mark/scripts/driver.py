@@ -21,7 +21,7 @@ class LaserDriver:
         try:
             self.client.connect((self.host, self.port))
             self.is_running = True
-            self._sync_states()
+            # self._sync_states()
         except Exception as e:
             print "1"
             print e
@@ -39,6 +39,9 @@ class LaserDriver:
                     break
                 value = buffer.decode("utf-8")
                 data = json.loads(value)
+                print ">>>>>>>> mark response <<<<<<<<<<"
+                print data
+                print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
                 id = data["id"]
 
                 if self.task_map.has_key(id):
@@ -55,24 +58,44 @@ class LaserDriver:
     def disconnect(self):
         self.client.close()
 
+    # def send(self, id, type, name, offset_x, offset_y, degree):
+    #     queue = Queue.Queue()
+    #     self.task_map[id] = queue
+    #
+    #     print ">>>>>>>>>>>>>>>>>" ,name
+    #     # 发送请求
+    #     # json_str = json.dumps({"id": id, "type": type, "name": name, "offset": [offset_x, offset_y], "degree": degree}, encoding="gbk")
+    #     json_str = json.dumps({"id": id, "type": type, "name": name, "offset": [offset_x, offset_y], "degree": degree})
+    #
+    #     print ">>>>>>>>>>>>>>>>>" ,json_str
+    #
+    #     self.client.send(json_str)
+    #
+    #     # blocking wait
+    #     result = queue.get()
+    #     # 移除
+    #     del self.task_map[id]
+    #
+    #     return result
+
+
     def send(self, id, type, name, offset_x, offset_y, degree):
         queue = Queue.Queue()
         self.task_map[id] = queue
 
+        print ">>>>>>>>>>>>>>>>>" ,name
         # 发送请求
-        self.client.send(json.dumps({
-            "id": id,
-            "type": type,
-            "name": name,
-            "offset": [
-                offset_x, offset_y
-            ],
-            "degree": degree
-        }))
+        # json_str = json.dumps({"id": id, "type": type, "name": name, "offset": [offset_x, offset_y], "degree": degree}, encoding="gbk")
+        json_str = json.dumps({"id": id, "type": type, "name": name, "offset": [offset_x, offset_y], "degree": degree})
 
-        # blocking wait
-        result = queue.get()
-        # 移除
-        del self.task_map[id]
+        print ">>>>>>>>>>>>>>>>>" ,json_str
 
-        return result
+        self.client.send(json_str)
+        buffer = self.client.recv(1024 * 4)
+        # value = buffer.decode("utf-8")
+        # data = json.loads(str(buffer))
+        # print ">>>>>>>> mark response <<<<<<<<<<"
+        # print data
+        # print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+
+        return True

@@ -11,7 +11,7 @@ class LaserRectLocator(AbsDetector):
         super(LaserRectLocator, self).__init__()
         self.h_min = 40
         self.h_max = 100
-        self.s_min = 235  # 教室晚上60, 教室白天83,
+        self.s_min = 100  # 教室晚上60, 教室白天83, light:140, dark:235
         self.s_max = 255
         self.v_min = 54
         self.v_max = 255

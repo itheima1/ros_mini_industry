@@ -8,19 +8,19 @@
     <arg name="aubo_host" default="192.168.1.101"/>
     <arg name="aubo_port" default="8899"/>
     <arg name="kinect_camera_2_line" default="1072.0"/>
-    <arg name="catch_depth" default="20.0"/>
+    <arg name="catch_depth" default="10.0"/>
 
     <!-- ui ip和port -->
 <!--    <arg name="ui_host" default="192.168.1.100"/>
     <arg name="ui_port" default="10008"/>-->
 
     <!-- laser ip和port -->
-    <arg name="laser_host" default="192.168.1.11"/>
+    <arg name="laser_host" default="172.16.54.100"/>
     <arg name="laser_port" default="8899"/>
 
     <!-- web ip和port -->
-    <arg name="web_host" default="127.0.0.1"/>
-    <arg name="web_port" default="3000"/>
+    <arg name="web_host" default="robot.czxy.com"/>
+    <arg name="web_port" default="39999"/>
 
     <!-- ui 同步节点 -->
 <!--     <node pkg="ui_sync" type="ui_sync_node.py" name="ui_sync"> -->
@@ -47,19 +47,26 @@
     <include file="$(find dh_hand_driver)/launch/dh_hand_controller.launch" />
 
     <!-- 相机节点 -->
-    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
-         <param name="video_device" value="/dev/video2" />
-         <param name="image_width" value="640" />
-         <param name="image_height" value="480" />
-         <param name="pixel_format" value="yuyv" />
-         <param name="camera_frame_id" value="usb_cam" />
-         <param name="io_method" value="mmap"/>
-         <remap from="/usb_cam/image_raw" to="/laser/image"/>
+    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="log" >
+        <param name="video_device" value="/dev/video0" />
+        <param name="image_width" value="1280" />
+        <param name="image_height" value="960" />
+        <param name="pixel_format" value="yuyv" />  <!-- or yuyv/nv12/mjpeg/uncompressed -->
+        <param name="camera_frame_id" value="usb_cam" />
+        <param name="framerate" value="30"/>
+        <!--        <param name="io_method" value="mmap"/>-->
+        <!--        <remap from="/usb_cam/image_raw" to="/laser/image"/>-->
     </node>
 
     <!-- 盒子定位节点 -->
     <node pkg="lab_vision" type="box_locator_node.py" name="box_locator">
     </node>
+
+
+    <node pkg="lab_vision" type="laser_box_node.py" name="laser_box_node" output="screen">
+        <param name="laser_mark_pkg_path" type="str" value="$(find lab_vision)"/>
+    </node>
+
 
     <!-- aubo 控制节点 -->
     <node pkg="aubo_ctrl" type="aubo_ctrl_node" name="aubo_ctrl">

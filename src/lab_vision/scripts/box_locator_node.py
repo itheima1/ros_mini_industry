@@ -19,7 +19,7 @@ bridge = CvBridge()
 rst_lst = None
 
 def image_callback(msg):
-    print "--------------------------------------------- image_callback: 1"
+    # print "--------------------------------------------- image_callback: 1"
     if not isinstance(msg, Image):
         return
 
@@ -27,7 +27,7 @@ def image_callback(msg):
 
     img = mat.copy()
 
-    print "--------------------------------------------- image_callback: 2"
+    # print "--------------------------------------------- image_callback: 2"
     global rst_lst
     rst_lst = detector.start_find(img)
 

@@ -25,6 +25,7 @@ def cancel_cb(goal_handle):
 
 
 def do_work(goal_handle):
+    print "============== do mark goal ==============="
     if not isinstance(goal_handle, ServerGoalHandle): return
     goal = goal_handle.get_goal()
     if not isinstance(goal, LaserMarkGoal):
@@ -39,6 +40,7 @@ def do_work(goal_handle):
     offset_y = response.center_offset_y
     degree = response.angle_degree
     client.close()
+    print "do_work offset x: {}, y: {}, a: {}".format(offset_x, offset_y, degree)
 
     goal_handle.set_accepted()
     response = driver.send(id=goal.id, type=goal.type, name=goal.name, offset_x=offset_x, offset_y=offset_y, degree=degree)

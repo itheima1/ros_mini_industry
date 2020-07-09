@@ -4,7 +4,7 @@
     <arg name="aubo_host" default="192.168.1.101"/>
     <arg name="aubo_port" default="8899"/>
     <arg name="kinect_camera_2_line" default="1072.0"/>
-    <arg name="catch_depth" default="20.0"/>
+    <arg name="catch_depth" default="10.0"/>
 
     <!-- kinect2 相机节点 -->
     <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch"/>

@@ -28,8 +28,8 @@ if __name__ == '__main__':
 
     # 发送请求
     goal = LaserMarkGoal()
-    goal.name = "hello"
-    goal.type = 1
+    goal.name = "你好Hello"
+    goal.type = 4
     goal.id = 1
     goal_handle = client.send_goal(goal, transition_cb=transition_cb, feedback_cb=feedback_cb)
 

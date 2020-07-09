@@ -34,3 +34,9 @@ unity_mini_industry
 
 ui_mini_industry
 
+
+## env
+
+```bash
+sudo apt install ros-melodic-libuvc-camera
+```

@@ -8,14 +8,14 @@ from common.geometry_util import *
 
 class LocatorMain():
 
-    def __init__(self,camera_info_path):
+    def __init__(self, camera_info_path):
         print "-------------------------------------------------------------1", camera_info_path
         self.laser_locator = LaserRectLocator()
         self.box_laser_locator = BoxLaserLocator()
         self.output_writer = None
 
         # 激光中心从传送带到盒子表面的偏移量
-        self.offset = np.array([-13.0, 55.0])
+        self.offset = np.array([-10, 40.0])
         # 参考的激光缩放比例
         self.rect_scale_factor = 8.5
         self.laser_rect_area = None
@@ -31,9 +31,21 @@ class LocatorMain():
         print "畸变系数", self.dist
         fs.release()
 
+    def handle_action(self, key):
+        if key == 81: # left
+            self.offset[0] -= 1
+        elif key == 83: # right
+            self.offset[0] += 1
+        elif key == 82: # up
+            self.offset[1] -= 1
+        elif key == 84: # down
+            self.offset[1] += 1
+
+        print "offset[x: {},y: {}]".format(self.offset[0], self.offset[1])
+
     def point_to_3d(self, p):
-        fx, fy = self.mtx[0, 0],self.mtx[1, 1]
-        cx, cy = self.mtx[0, 2],self.mtx[1, 2]
+        fx, fy = self.mtx[0, 0], self.mtx[1, 1]
+        cx, cy = self.mtx[0, 2], self.mtx[1, 2]
         z = self.depth
         x = (p[0] - cx) * z / fx
         y = (p[1] - cy) * z / fy
@@ -41,7 +53,7 @@ class LocatorMain():
 
     def run(self, frame):
         # 尝试定位盒子
-        box_rst  = self.box_laser_locator.detect(frame)
+        box_rst = self.box_laser_locator.detect(frame)
 
         img_show = frame.copy()
         h, w, c = img_show.shape
@@ -50,7 +62,7 @@ class LocatorMain():
         cv2.line(img_show, (0, h / 2), (w, h / 2), (255, 50, 255), 1, cv2.LINE_AA)
 
         screen_center = (w / 2, h / 2)
-        refer_rect_width  = 100 * 0.2 * self.rect_scale_factor
+        refer_rect_width = 100 * 0.2 * self.rect_scale_factor
         refer_rect_height = 100 * 0.4 * self.rect_scale_factor
         # 绘制黄色的矩形框, 要求和目标对齐
         cv2.rectangle(img_show,
@@ -61,9 +73,8 @@ class LocatorMain():
         center_offset = None
         angle_degree = None
 
-
         if box_rst is None:
-            print "-----------没找到盒子，执行矩形框定位------------"
+            print "-----------没找到盒子，矩形框定位------------"
             # 2. 如果没检测到盒子，先计算矩形框的包容盒，确定中心位置（根据二值化并查找边缘）
             # 根据矩形框和中心构建坐标系，绘制
             # 计算其偏移后的预测位置，绘制
@@ -72,22 +83,22 @@ class LocatorMain():
                 print "未检测到矩形激光标定目标"
             else:
                 laser_rect_area, rect_center = laser_rect_rst
-
-                # 绘制中心和圆环
-                cv2.circle(img_show, tuple(np.int0(rect_center)), 4, (0, 0, 255), -1)
-                cv2.circle(img_show, tuple(np.int0(rect_center)), 10, (0, 255, 255), 1)
-                points = np.int0(laser_rect_area)
-                # 绘制最小有向包容盒
-                cv2.drawContours(img_show, [points], 0, (0, 255, 255), 2)
-
                 # 更新最新的位置信息
                 self.laser_rect_area = laser_rect_area
                 self.rect_center = rect_center
 
+            if self.laser_rect_area is not None:
+                # 绘制中心和圆环
+                cv2.circle(img_show, tuple(np.int0(self.rect_center)), 4, (0, 0, 255), -1)
+                cv2.circle(img_show, tuple(np.int0(self.rect_center)), 10, (0, 255, 255), 1)
+                points = np.int0(self.laser_rect_area)
+                # 绘制最小有向包容盒
+                cv2.drawContours(img_show, [points], 0, (0, 255, 255), 2)
+
         else:
-            print "-----------找到盒子，绘制盒子并计算偏移量--------：",
+            print "-----------找到盒子，计算偏移量--------：",
             # 1. 检测到盒子，并计算中点（注意用离中心的偏移量来修正x位置） 如果没有最新的标定数据，则要求其有激光实施标定
-            target_rect_area , box_center_float = box_rst
+            target_rect_area, box_center_float = box_rst
             # 绘制最小有向包容盒
             cv2.drawContours(img_show, [np.int0(target_rect_area)], 0, (0, 0, 255), 2)
 
@@ -130,18 +141,22 @@ class LocatorMain():
                 # 对激光预测矩形进行排序, 绘制向量
                 laser_rect_area_offset = sort_rect(laser_rect_area_offset)
                 laser_rect_vector_x, laser_rect_vector_y = calc_vector(laser_rect_area_offset)
-                cv2.arrowedLine(img_show, tuple(np.int0(laser_rect_area_offset[0])), tuple(np.int0(laser_rect_area_offset[0] + laser_rect_vector_x)),
+                cv2.arrowedLine(img_show, tuple(np.int0(laser_rect_area_offset[0])),
+                                tuple(np.int0(laser_rect_area_offset[0] + laser_rect_vector_x)),
                                 (0, 0, 255), 2, cv2.LINE_AA)
-                cv2.arrowedLine(img_show, tuple(np.int0(laser_rect_area_offset[0])), tuple(np.int0(laser_rect_area_offset[0] + laser_rect_vector_y)),
+                cv2.arrowedLine(img_show, tuple(np.int0(laser_rect_area_offset[0])),
+                                tuple(np.int0(laser_rect_area_offset[0] + laser_rect_vector_y)),
                                 (0, 255, 0), 2, cv2.LINE_AA)
 
                 # 对盒子矩形的顶点进行排序显示
                 target_rect_area = sort_rect(target_rect_area)
                 target_rect_vector_x, target_rect_vector_y = calc_vector(target_rect_area)
 
-                cv2.arrowedLine(img_show, tuple(np.int0(target_rect_area[0])), tuple(np.int0(target_rect_area[0] + target_rect_vector_x)),
+                cv2.arrowedLine(img_show, tuple(np.int0(target_rect_area[0])),
+                                tuple(np.int0(target_rect_area[0] + target_rect_vector_x)),
                                 (0, 0, 255), 2, cv2.LINE_AA)
-                cv2.arrowedLine(img_show, tuple(np.int0(target_rect_area[0])), tuple(np.int0(target_rect_area[0] + target_rect_vector_y)),
+                cv2.arrowedLine(img_show, tuple(np.int0(target_rect_area[0])),
+                                tuple(np.int0(target_rect_area[0] + target_rect_vector_y)),
                                 (0, 255, 0), 2, cv2.LINE_AA)
 
                 # 计算Y向量的夹角 laser_rect_vector_y -> target_rect_vector_y
@@ -149,13 +164,18 @@ class LocatorMain():
                 norm_t = np.linalg.norm(target_rect_vector_y)
                 cos_angle = laser_rect_vector_y.dot(target_rect_vector_y) / (norm_l * norm_t)
 
+                cross_rst = np.cross(laser_rect_vector_y, target_rect_vector_y)
                 angle_radius = np.arccos(cos_angle)
                 angle_degree = np.rad2deg(angle_radius)
+
+                if cross_rst < 0:
+                    angle_degree = -angle_degree
 
                 # 计算三维空间偏移量
                 # 1. 将两个坐标系点、开始和结束点转成3维
                 rst = self.calc_offset(r_center, laser_rect_vector_x, laser_rect_vector_y, box_center)
                 center_offset = rst[:2] * 1000
+                center_offset[0] = -center_offset[0]
 
                 print "偏移：[x: {0[0]}, y: {0[1]}], 夹角：{1}".format(center_offset, angle_degree)
                 # TODO: 最近的一波都记录下来，取一下加权平均数
