@@ -55,4 +55,4 @@ CATKIN_IGNORE
 cmake-build-debug/
 .idea/
 
-
+/src/aubo_ctrl/3rdparty/aubo_dependents/

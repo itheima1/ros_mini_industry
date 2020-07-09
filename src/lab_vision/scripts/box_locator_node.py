@@ -19,12 +19,15 @@ bridge = CvBridge()
 rst_lst = None
 
 def image_callback(msg):
-    if not isinstance(msg, Image): return
+    print "--------------------------------------------- image_callback: 1"
+    if not isinstance(msg, Image):
+        return
 
     mat = bridge.imgmsg_to_cv2(msg, "bgr8")
 
     img = mat.copy()
 
+    print "--------------------------------------------- image_callback: 2"
     global rst_lst
     rst_lst = detector.start_find(img)
 
@@ -86,9 +89,10 @@ if __name__ == '__main__':
     service = rospy.Service("/box/poses", GetBoxPoses, box_callback)
 
     g_ctl.update_debug_mode(True)
-    print "debug_mode: ", g_ctl.is_debug_mode
+    print "--------------------------------------------- debug_mode: ", g_ctl.is_debug_mode
 
     detector = detector_main.DetectorMain()
+
 
     rospy.spin()
 

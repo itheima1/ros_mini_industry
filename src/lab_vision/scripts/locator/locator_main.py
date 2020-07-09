@@ -9,10 +9,10 @@ from common.geometry_util import *
 class LocatorMain():
 
     def __init__(self,camera_info_path):
+        print "-------------------------------------------------------------1", camera_info_path
         self.laser_locator = LaserRectLocator()
         self.box_laser_locator = BoxLaserLocator()
         self.output_writer = None
-
 
         # 激光中心从传送带到盒子表面的偏移量
         self.offset = np.array([-13.0, 55.0])

@@ -27,10 +27,10 @@
             <param name="frame_rate" value="30"/>
 
             <param name="timestamp_method" value="start"/> <!-- start of frame -->
-            <param name="camera_info_url" value="file:///tmp/cam.yaml"/>
+<!--            <param name="camera_info_url" value="file:///tmp/cam.yaml"/>-->
 
-            <param name="auto_exposure" value="3"/> <!-- use aperture_priority auto exposure -->
-            <param name="auto_white_balance" value="false"/>
+<!--            <param name="auto_exposure" value="3"/> &lt;!&ndash; use aperture_priority auto exposure &ndash;&gt;-->
+<!--            <param name="auto_white_balance" value="false"/>-->
         </node>
     </group>
 

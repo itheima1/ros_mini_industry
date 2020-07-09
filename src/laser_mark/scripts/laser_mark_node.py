@@ -58,14 +58,18 @@ def do_goal():
 
 if __name__ == '__main__':
     rospy.init_node("laser_mark_node")
-
+    print "------------------------------------------------------laser_mark_node.py"
     host = rospy.get_param("~host", "192.168.1.10")
     port = rospy.get_param("~port", 8899)
 
+    print "laser_mark_node.py: host:{} port:{}".format(host, port)
+
     threading.Thread(target=do_goal).start()
 
+    print "------------------connecting"
     driver = LaserDriver(host, port)
     driver.connect()
+    print "------------------connect success"
 
     # 创建Action的服务端
     server = actionlib.ActionServer("/laser/mark", LaserMarkAction, goal_cb=goal_cb, cancel_cb=cancel_cb,
