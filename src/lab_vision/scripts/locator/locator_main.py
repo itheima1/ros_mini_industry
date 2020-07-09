@@ -4,18 +4,21 @@ import cv2
 from locator.laser_locator import LaserRectLocator
 from locator.box_locator import BoxLaserLocator
 from common.geometry_util import *
+from os import path
 
 
 class LocatorMain():
 
-    def __init__(self,camera_info_path):
+    def __init__(self,node_path, camera_info):
+        camera_info_path = path.join(node_path, camera_info)
         print "-------------------------------------------------------------1", camera_info_path
+
         self.laser_locator = LaserRectLocator()
         self.box_laser_locator = BoxLaserLocator()
         self.output_writer = None
 
         # 激光中心从传送带到盒子表面的偏移量
-        self.offset = np.array([-13.0, 55.0])
+        self.offset = np.array([-10.0, 40.0])
         # 参考的激光缩放比例
         self.rect_scale_factor = 8.5
         self.laser_rect_area = None
@@ -30,6 +33,17 @@ class LocatorMain():
         print "相机内参", self.mtx
         print "畸变系数", self.dist
         fs.release()
+        self.node_path = node_path
+        self.init_params()
+
+    def init_params(self):
+        self.laser_locator.load_params(self.node_path)
+        self.box_laser_locator.load_params(self.node_path)
+
+    def save_params(self):
+        print "save locator_main params ing.................."
+        self.laser_locator.save_params(self.node_path)
+        self.box_laser_locator.load_params(self.node_path)
 
     def point_to_3d(self, p):
         fx, fy = self.mtx[0, 0],self.mtx[1, 1]

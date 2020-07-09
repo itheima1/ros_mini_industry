@@ -25,7 +25,7 @@ import common.global_ctl as g_ctl
 class DetectorMain:
     font_face = cv2.FONT_HERSHEY_COMPLEX
 
-    def __init__(self):
+    def __init__(self, node_path):
         if is_debug_mode:
             cv2.namedWindow("image")
             cv2.setMouseCallback("image", self.on_mouse_event)
@@ -35,6 +35,17 @@ class DetectorMain:
         # self.spliter_agv_in_x = 600
         self.spliter_percent_in_x_line = 0.4
         self.spliter_percent_in_x_agv = 0.5
+        self.node_path = node_path
+        self.init_params()
+
+    def init_params(self):
+        self.line_detector.load_params(self.node_path)
+        self.agv_detector.load_params(self.node_path)
+
+    def save_params(self):
+        print "save detector_main params ing.................."
+        self.line_detector.save_params(self.node_path)
+        self.agv_detector.load_params(self.node_path)
 
     def start_find(self, img):
         # img = pic.copy()
@@ -193,3 +204,4 @@ class DetectorMain:
     def on_mouse_event(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
             print("坐标----------------------({}, {})------------------".format(x, y))
+

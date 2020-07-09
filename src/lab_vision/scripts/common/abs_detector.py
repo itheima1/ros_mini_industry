@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # encoding:utf-8
 import cv2
-
+import json
+from os import path
 
 class AbsDetector(object):
 
@@ -14,8 +15,53 @@ class AbsDetector(object):
         self.v_max = 255
         self.win_name = ""
 
+    def save_params(self, node_path):
+        if self.win_name:
+           try:
+               obj = {
+                   "h_min": self.h_min,
+                   "h_max": self.h_max,
+                   "s_min": self.s_min,
+                   "s_max": self.s_max,
+                   "v_min": self.v_min,
+                   "v_max": self.v_max
+               }
+               file_path = path.join(node_path, "config", '{}.json'.format(self.win_name))
+               # json_str = json.dumps(obj)
+               with open(file_path, 'w') as f:
+                   json.dump(obj, f)
+                   print("保存配置文件 success ---------", file_path, obj)
+           except Exception as e:
+               print e
+        else:
+            print("保存失败 --------- 没有窗口名称")
+
+    def load_params(self, node_path):
+        if self.win_name:
+            try:
+                file_path = path.join(node_path, "config", '{}.json'.format(self.win_name))
+                with open(file_path, 'r') as f:
+                    obj = json.load(f)  # 此时a是一个字典对
+                    if obj is None:
+                        print("加载配置文件失败. --------- ")
+                        return
+                    print("加载配置文件 success. ---------", obj)
+                    self.h_min = obj["h_min"]
+                    self.h_max = obj["h_max"]
+                    self.s_min = obj["s_min"]
+                    self.s_max = obj["s_max"]
+                    self.v_min = obj["v_min"]
+                    self.v_max = obj["v_max"]
+            except Exception as e:
+                print e
+        else:
+            print("没有配置文件")
+
+    def init_win_name(self, name):
+        self.win_name = "mask-" + name
+
     def init_track_bar(self, name):
-        self.win_name = "mask_img-" + name
+        self.win_name = "mask-" + name
         cv2.namedWindow(self.win_name, cv2.WINDOW_AUTOSIZE)
         cv2.createTrackbar("h_min:", self.win_name, self.h_min, 255, lambda x: self.update_hsv_args("h_min", x))
         cv2.createTrackbar("h_max:", self.win_name, self.h_max, 255, lambda x: self.update_hsv_args("h_max", x))

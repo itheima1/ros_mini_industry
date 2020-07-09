@@ -19,7 +19,6 @@ locator = None
 
 
 def image_callback(msg):
-    print "-------------------------------------------image_callback!1", type(msg)
     if not isinstance(msg, Image): return
 
     cv_mat = None
@@ -39,7 +38,6 @@ def image_callback(msg):
         return
 
     global rst
-    print "-------------------------------------------image_callback!2", type(msg)
 
     # cv2.imshow("img_raw", img)
     rst = locator.run(img)
@@ -47,8 +45,9 @@ def image_callback(msg):
     # print("-----------", cv2.__version__, sys.version)
     # half_mat = cv2.resize(img, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
     # cv2.imshow("image", half_mat)
-    print "-------------------------------------------image_callback!3", type(msg)
-    cv2.waitKey(10)
+    action = cv2.waitKey(10) & 0xFF
+    if action == ord('s') or action == ord('S'):
+        rst.save_params()
 
 
 def box_callback(req):
@@ -77,32 +76,13 @@ if __name__ == '__main__':
     # laser_mark_pkg_path = "/home/ty/Workspace/ROS/ros_mini_industry/src/lab_vision"
     # g_ctl.update_debug_mode(True)
     # print "debug_mode: ", g_ctl.is_debug_mode
-    camera_info_path = laser_mark_pkg_path + "/data/usb_camera.yml"
 
-    print "laser_mark_pkg_path: ", camera_info_path
-    locator = LocatorMain(camera_info_path)
+    print "laser_mark_pkg_path: ", laser_mark_pkg_path
+    locator = LocatorMain(laser_mark_pkg_path, "data/usb_camera.yml")
 
     subscriber = rospy.Subscriber("/usb_cam/image_raw", Image, image_callback)
     service = rospy.Service("/laser/box", GetLaserBoxLocator, box_callback)
 
-    # threading.Thread(target=capture_image, args=(locator, )).start()
-
-    # global rst
-    # capture = cv2.VideoCapture(2)
-    # if not capture.isOpened():
-    #     print "相机无法打开"
-    # else:
-    #     capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    #     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
-    #     while True:
-    #         _, frame = capture.read()
-    #         rst = locator.run(frame)
-    #         print "-----------------"
-    #
-    #         action = cv2.waitKey(10) & 0xFF
-    #         # if action == ord("q") or action == 27:
-    #         #     break
-    # capture.release()
 
     rospy.spin()
 
