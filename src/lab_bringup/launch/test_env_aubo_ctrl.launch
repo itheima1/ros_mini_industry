@@ -14,6 +14,7 @@
 
     <!-- 盒子定位节点 -->
     <node pkg="lab_vision" type="box_locator_node.py" name="box_locator" output="screen">
+        <param name="box_locator_pkg_path" type="str" value="$(find lab_vision)"/>
     </node>
 
     <!-- aubo 控制节点 -->

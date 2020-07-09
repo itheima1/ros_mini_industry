@@ -17,7 +17,7 @@ def detect_from_camera():
     # capture.set(cv2.)
     # img = cv2.imread("./imgs/laser_0.jpg", cv2.IMREAD_COLOR)
     # img = cv2.imread("./imgs/laser_1.jpg", cv2.IMREAD_COLOR)
-    locator_main = LocatorMain("../data/usb_camera.yml")
+    locator_main = LocatorMain("../", "/data/usb_camera.yml")
     # img = cv2.imread("./imgs/laser_2.jpg", cv2.IMREAD_COLOR)
     # cv2.imshow("image", img)
     while True:
@@ -54,7 +54,7 @@ def detect_from_video():
     capture.set(cv2.CAP_PROP_POS_FRAMES, currentFrames)
 
     print "totalFrames: ", totalFrames
-    locator = LocatorMain("../data/usb_camera.yml")
+    locator = LocatorMain("../", "data/usb_camera.yml")
     # locator.set_writer(output)
     try:
         while True:
@@ -71,6 +71,8 @@ def detect_from_video():
                 break
             elif action == 32:
                 cv2.waitKey(0)
+            elif action == ord('s') or action == ord('S'):
+                locator.save_params()
             elif action != 255:
                 locator.handle_action(action)
 
@@ -95,7 +97,7 @@ def detect_from_video():
 def detect_from_image():
     img = cv2.imread("./imgs/laser_1.jpg", cv2.IMREAD_COLOR)
     # img = cv2.imread("./imgs/laser_test.jpg", cv2.IMREAD_COLOR)
-    locator = LocatorMain("../data/usb_camera.yml")
+    locator = LocatorMain("../", "/data/usb_camera.yml")
     locator.run(img)
 
     while True:
@@ -110,7 +112,7 @@ def detect_from_image_loop():
     img_emtpy = cv2.imread("./imgs/laser_0.jpg", cv2.IMREAD_COLOR)
     img_rect = cv2.imread("./imgs/laser_rect1.jpg", cv2.IMREAD_COLOR)
     img_box = cv2.imread("./imgs/laser_1.jpg", cv2.IMREAD_COLOR)
-    locator = LocatorMain("../data/usb_camera.yml")
+    locator = LocatorMain("../", "data/usb_camera.yml")
 
     try:
         counter = 0

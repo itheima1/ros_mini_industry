@@ -15,7 +15,7 @@ if __name__ == '__main__':
     g_ctl.update_debug_mode(True)
     print "debug_mode: ", g_ctl.is_debug_mode
 
-    detector = DetectorMain()
+    detector = DetectorMain("../")
 
     # 输入
     pic = cv2.imread("./imgs/test_aubo2.png", cv2.IMREAD_UNCHANGED)
@@ -29,5 +29,7 @@ if __name__ == '__main__':
         action = cv2.waitKey(30) & 0xFF
         if action == ord("q") or action == 27:
             break
+        elif action == ord('s') or action == ord('S'):
+            detector.save_params()
 
     cv2.destroyAllWindows()

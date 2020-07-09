@@ -19,7 +19,6 @@ locator = None
 
 
 def image_callback(msg):
-    # print "-------------------------------------------image_callback!1", type(msg)
     if not isinstance(msg, Image): return
 
     cv_mat = None
@@ -39,6 +38,7 @@ def image_callback(msg):
         return
 
     global rst
+
     # cv2.imshow("img_raw", img)
     rst = locator.run(img)
     #rst = ((20, -10), -30)
@@ -47,7 +47,9 @@ def image_callback(msg):
     # half_mat = cv2.resize(img, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
     # cv2.imshow("image", half_mat)
     action = cv2.waitKey(10) & 0xFF
-    if action != 255:
+    if action == ord('s') or action == ord('S'):
+        rst.save_params()
+    elif action != 255:
         locator.handle_action(action)
 
 
@@ -79,8 +81,8 @@ if __name__ == '__main__':
     # print "debug_mode: ", g_ctl.is_debug_mode
     camera_info_path = laser_mark_pkg_path + "/data/usb_camera.yml"
 
-    print "laser_mark_pkg_path: ", camera_info_path
-    locator = LocatorMain(camera_info_path)
+    print "laser_mark_pkg_path: ", laser_mark_pkg_path
+    locator = LocatorMain(laser_mark_pkg_path, "data/usb_camera.yml")
 
     subscriber = rospy.Subscriber("/usb_cam/image_raw", Image, image_callback)
     service = rospy.Service("/laser/box", GetLaserBoxLocator, box_callback)

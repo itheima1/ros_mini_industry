@@ -20,6 +20,7 @@ class AgvDetector(AbsDetector):
 
         self.init_track_bar("agv")
 
+
     def detect(self, image):
 
         height, width = image.shape[:2]

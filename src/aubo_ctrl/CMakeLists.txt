@@ -22,6 +22,9 @@ find_package(catkin REQUIRED COMPONENTS
 set(PREBUILT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+MESSAGE(">>>>>>>>>>>>>>>>>>>" ${PREBUILT_DIR})
+MESSAGE(">>>>>>>>>>>>>>>>>>>" ${CMAKE_MODULE_PATH})
+
 find_package(AuBo REQUIRED)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-compare")
