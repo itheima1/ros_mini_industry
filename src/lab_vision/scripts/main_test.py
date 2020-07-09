@@ -29,5 +29,7 @@ if __name__ == '__main__':
         action = cv2.waitKey(30) & 0xFF
         if action == ord("q") or action == 27:
             break
+        elif action == ord('s') or action == ord('S'):
+            detector.save_params()
 
     cv2.destroyAllWindows()

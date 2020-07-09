@@ -71,6 +71,8 @@ def detect_from_video():
                 break
             elif action == 32:
                 cv2.waitKey(0)
+            elif action == ord('s') or action == ord('S'):
+                locator.save_params()
 
             currentFrames += 1
 
@@ -134,6 +136,6 @@ def detect_from_image_loop():
 
 
 if __name__ == '__main__':
-    detect_from_camera()
-    # detect_from_video()
+    # detect_from_camera()
+    detect_from_video()
     # detect_from_image_loop()

@@ -43,7 +43,7 @@ class LocatorMain():
     def save_params(self):
         print "save locator_main params ing.................."
         self.laser_locator.save_params(self.node_path)
-        self.box_laser_locator.load_params(self.node_path)
+        self.box_laser_locator.save_params(self.node_path)
 
     def point_to_3d(self, p):
         fx, fy = self.mtx[0, 0],self.mtx[1, 1]

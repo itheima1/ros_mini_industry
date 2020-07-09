@@ -30,22 +30,25 @@ class AbsDetector(object):
                # json_str = json.dumps(obj)
                with open(file_path, 'w') as f:
                    json.dump(obj, f)
-                   print("保存配置文件 success ---------", file_path, obj)
+                   print "保存配置文件 success ---------", file_path, obj
            except Exception as e:
                print e
         else:
-            print("保存失败 --------- 没有窗口名称")
+            print "保存配置失败 --------- 没有窗口名称"
 
     def load_params(self, node_path):
         if self.win_name:
             try:
                 file_path = path.join(node_path, "config", '{}.json'.format(self.win_name))
+                if not path.exists(file_path):
+                    print "加载配置文件失败. --------- 文件不存在： ", file_path
+                    return
                 with open(file_path, 'r') as f:
                     obj = json.load(f)  # 此时a是一个字典对
                     if obj is None:
-                        print("加载配置文件失败. --------- ")
+                        print "加载配置文件失败. --------- "
                         return
-                    print("加载配置文件 success. ---------", obj)
+                    print"加载配置文件 success. ---------", obj
                     self.h_min = obj["h_min"]
                     self.h_max = obj["h_max"]
                     self.s_min = obj["s_min"]
@@ -55,7 +58,7 @@ class AbsDetector(object):
             except Exception as e:
                 print e
         else:
-            print("没有配置文件")
+            print "保存配置失败 --------- 没有窗口名称"
 
     def init_win_name(self, name):
         self.win_name = "mask-" + name

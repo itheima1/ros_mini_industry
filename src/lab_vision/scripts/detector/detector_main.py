@@ -45,7 +45,7 @@ class DetectorMain:
     def save_params(self):
         print "save detector_main params ing.................."
         self.line_detector.save_params(self.node_path)
-        self.agv_detector.load_params(self.node_path)
+        self.agv_detector.save_params(self.node_path)
 
     def start_find(self, img):
         # img = pic.copy()
