@@ -66,7 +66,7 @@ class AgvDetector(AbsDetector):
             approx_curve = cv2.approxPolyDP(cnt, cnt_len * 0.02, True)  # 近似多边形
             curve = approx_curve.shape[0]  # 近似多边形边数
 
-            if area > 100000:
+            if area > 100000 and curve <= 5 :
                 # print("目标区域面积: [{}]，边个数: [{}]".format(area, curve))
                 rect = cv2.minAreaRect(cnt)
                 target_area = cv2.boxPoints(rect)

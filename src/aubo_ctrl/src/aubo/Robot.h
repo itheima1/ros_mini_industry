@@ -262,7 +262,7 @@ public:
      */
     int  rootServiceRobotMoveControl(aubo_robot_namespace::RobotMoveControlCommand cmd);
 
-    int setOffset(float x_offset, float y_offset, float z_offset);
+    void setOffset(float x_offset, float y_offset, float z_offset);
 
     int moveJwithPose(double *pose, bool isBlock);
 };

@@ -41,7 +41,7 @@ map<string, bool> canceledIds;
 Mat exMat;
 Mat cameraMatrix, distCoeffs;
 
-float z_up = 0.12f; // 夹取抬起高度
+float z_up = 0.12f; // 夹取抬起高度 12cm
 float catch_depth = 10.0f; // 抓取的深度
 float box_height = 45.0f; // 盒子的高度
 float line_box_distance_z ; // 相机距离传送带盒子表面距离
@@ -58,12 +58,12 @@ double defaultAngles[6] = {
 };
 // 小车高处安全位置
 double agvAboveAngles[6] = {
-        -9.263 * DE2RA,
-        12.880 * DE2RA,
-        -35.598 * DE2RA,
-        34.058 * DE2RA,
-        -90.864 * DE2RA,
-        -66.888 * DE2RA
+         35.109 * DE2RA,
+        -11.845 * DE2RA,
+        -65.565 * DE2RA,
+         30.147 * DE2RA,
+        -90.770 * DE2RA,
+        -66.890 * DE2RA
 };
 
 // 传送带原料高处安全位置
@@ -473,7 +473,7 @@ void do_blanking(ServerGoalHandle &handle) {
         return;
     }
 
-    // TODONE: 测试用， 记得把 line_poses 改成 agv_poses 先准备好目标区域位置
+    // TODO: 测试用， 上线记得把 line_poses 改成 agv_poses 先准备好目标区域位置
     // 判断小车AGV产品是否有空白的目标位置，没有的话，提示用户空出目标位置
     auto agv_target_pose = agv_poses[agv_poses.size() - 1];
     if (agv_target_pose.type != 2) {
@@ -529,8 +529,8 @@ void do_blanking(ServerGoalHandle &handle) {
 
     int rst = Robot::getInstance()->moveJ(defaultAngles, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {
-        cerr << "回到待命位置失败"+ to_string(rst) << endl;
-        result.result = "回到待命位置失败"+ to_string(rst);
+        cerr << "blanking回到待命位置失败"+ to_string(rst) << endl;
+        result.result = "blanking回到待命位置失败"+ to_string(rst);
         handle.setAborted(result);
         return;
     }
@@ -538,11 +538,9 @@ void do_blanking(ServerGoalHandle &handle) {
     // 先MoveJ移动到上方12cm位置
     rst = Robot::getInstance()->moveJwithPose(posUp, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {
-        cerr << "移动到上方失败" << rst << endl;
-
-        result.result = "移动到上方失败";
+        cerr << "blanking移动到上方失败" << rst << endl;
+        result.result = "blanking移动到上方失败";
         handle.setAborted(result);
-
         return;
     }
     // 打开夹爪
@@ -573,10 +571,16 @@ void do_blanking(ServerGoalHandle &handle) {
         return;
     }
 
+    // TODO: 上线记得删掉，构建line目标位置位姿
+//    Mat target2camera = getBoxMat(targetCenter, targetVectorY, line_box_distance_z);
+
     // 构建agv目标位置位姿
     Mat target2camera = getBoxMat(targetCenter, targetVectorY, avg_box_distance_z);
     Mat targetMatUp = exMat * target2camera * toolMatUpInv;
     double *targetPoseUp = convert2pose(targetMatUp);
+
+    // TODO: 上线记得删掉，测试代码，移动到上料区上方
+//    rst = Robot::getInstance()->moveJ(lineRawAboveAngles, true);
 
     //  先MoveJ到桌子高处，以避免碰撞
     rst = Robot::getInstance()->moveJ(agvAboveAngles, true);

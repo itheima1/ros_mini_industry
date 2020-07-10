@@ -8,6 +8,8 @@ from itheima_msgs.msg import AssemblyIR, AssemblyLine
 # from driver import AssemblyDevice
 from driver_ser import AssemblyDevice
 import sys
+import serial
+import threading
 
 
 ir_1 = False
@@ -66,6 +68,21 @@ def ir_callback(status):
         ir_publisher.publish(msg)
 
 
+def do_recv():
+    while not rospy.is_shutdown():
+        buffer = ser.read(6)
+        buffer = bytearray(buffer)
+
+        ir_1 = buffer[3] & 0x04 != 0
+        ir_2 = buffer[3] & 0x01 != 0
+
+        msg = AssemblyIR()
+        msg.ir_1 = ir_1
+        msg.ir_2 = ir_2
+        ir_publisher.publish(msg)
+
+
+
 if __name__ == '__main__':
     # 创建node
     node_name = "assembly_line_node"
@@ -91,36 +108,41 @@ if __name__ == '__main__':
     # ad = AssemblyDevice(host, port)
     ad = AssemblyDevice(port)
     ad.connect()
-    ad.start_all()
+    ad.stop_all()
+
+    ser = serial.Serial(port="/dev/ttyUSB1", baudrate=9600)
+    threading.Thread(target=do_recv).start()
 
     # 获取红外数据
     rate = rospy.Rate(10)
     # ad.get_ir_status(lambda: not rospy.is_shutdown(), lambda: rate.sleep(), ir_callback)
     # global ir_1, ir_2, line_status
     while not rospy.is_shutdown():
-        line_states = ad.line_states
-        ir_states = ad.ir_states
-        # print ir_states
-        if ir_states[0] != ir_1 or ir_states[1] != ir_2:
-            ir_1 = ir_states[0]
-            ir_2 = ir_states[1]
+        ser.write(b'\xFE\x02\x00\x00\x00\x04\x6D\xC6')
 
-            msg = AssemblyIR()
-            msg.ir_1 = ir_1
-            msg.ir_2 = ir_2
-            ir_publisher.publish(msg)
+        line_states = ad.line_states
+        # ir_states = ad.ir_states
+        # # print ir_states
+        # # if ir_states[0] != ir_1 or ir_states[1] != ir_2:
+        # #     ir_1 = ir_states[0]
+        # #     ir_2 = ir_states[1]
+        # #
+        # #     msg = AssemblyIR()
+        # #     msg.ir_1 = ir_1
+        # #     msg.ir_2 = ir_2
+        # #     ir_publisher.publish(msg)
+        #
         # ir_1 = ir_states[0]
         # ir_2 = ir_states[1]
-        #
         # msg = AssemblyIR()
         # msg.ir_1 = ir_1
         # msg.ir_2 = ir_2
         # ir_publisher.publish(msg)
-
-        # if line_states[0] != line_status[1] or \
-        #         line_states[1] != line_status[2] or \
-        #         line_states[2] != line_status[3] or \
-        #         line_states[3] != line_status[4]:
+        #
+        # # if line_states[0] != line_status[1] or \
+        # #         line_states[1] != line_status[2] or \
+        # #         line_states[2] != line_status[3] or \
+        # #         line_states[3] != line_status[4]:
         publish_line_state(line_states)
 
         rate.sleep()

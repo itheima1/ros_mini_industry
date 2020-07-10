@@ -181,8 +181,25 @@ class DetectorMain:
 
         if g_ctl.is_debug_mode:
             # 中心画一条线，保证在盒子在中心位置附近
-            cv2.line(img, (w / 2, 0), (w / 2, h), (50, 255, 50), 3, cv2.LINE_AA)
-            cv2.line(img, (0, h / 2), (w, h / 2), (50, 50, 255), 3, cv2.LINE_AA)
+            cv2.line(img, (w / 2, 0), (w / 2, h), (50, 255, 50), 2, cv2.LINE_AA)
+            line_offset_x = -30
+            cv2.line(img, (w / 2 + line_offset_x, 0), (w / 2 + line_offset_x, h), (50, 255, 50), 2, cv2.LINE_AA)
+            line_offset_x = -530
+            cv2.line(img, (w / 2 + line_offset_x, 0), (w / 2 + line_offset_x, h), (50, 255, 50), 2, cv2.LINE_AA)
+            line_offset_x = 444
+            cv2.line(img, (w / 2 + line_offset_x, 0), (w / 2 + line_offset_x, h), (50, 255, 50), 2, cv2.LINE_AA)
+
+            cv2.line(img, (0, h / 2), (w, h / 2), (50, 50, 255), 2, cv2.LINE_AA)
+            line_offset_y = 48
+            cv2.line(img, (0, h / 2 + line_offset_y), (w, h / 2 + line_offset_y), (50, 50, 255), 2, cv2.LINE_AA)
+            line_offset_y = 316
+            cv2.line(img, (0, h / 2 + line_offset_y), (w, h / 2 + line_offset_y), (50, 50, 255), 2, cv2.LINE_AA)
+            line_offset_y = 360
+            cv2.line(img, (0, h / 2 + line_offset_y), (w, h / 2 + line_offset_y), (50, 50, 255), 2, cv2.LINE_AA)
+
+            cv2.putText(img, "Center", (w / 2 + 50, h / 2 - 50), DetectorMain.font_face, fontScale=1.3, color=(255, 100, 255), thickness=2, lineType=cv2.LINE_AA)
+            cv2.arrowedLine(img, (w / 2 + 50, h / 2 - 50), (w / 2 + 5, h / 2 - 5), (0,255,255), 2)
+
             cv2.imshow("image", img)
         # 打印盒子列表 [(center, vector_x),(center, vector_x) ...]
         return assembly_line_box_lst, agv_box_lst

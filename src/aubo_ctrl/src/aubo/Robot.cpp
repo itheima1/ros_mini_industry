@@ -161,7 +161,7 @@ int Robot::moveL(aubo_robot_namespace::wayPoint_S &wayPoint, bool IsBolck) {
 }
 
 
-int Robot::setOffset(float x, float y, float z){
+void Robot::setOffset(float x, float y, float z){
     x_offset = x;
     y_offset = y;
     z_offset = z;

@@ -59,6 +59,12 @@ class AbsDetector(object):
                     self.s_max = obj["s_max"]
                     self.v_min = obj["v_min"]
                     self.v_max = obj["v_max"]
+                    cv2.setTrackbarPos("h_min:", self.win_name, self.h_min)
+                    cv2.setTrackbarPos("h_max:", self.win_name, self.h_max)
+                    cv2.setTrackbarPos("s_min:", self.win_name, self.s_min)
+                    cv2.setTrackbarPos("s_max:", self.win_name, self.s_max)
+                    cv2.setTrackbarPos("v_min:", self.win_name, self.v_min)
+                    cv2.setTrackbarPos("v_max:", self.win_name, self.v_max)
             except Exception as e:
                 print e
         else:
