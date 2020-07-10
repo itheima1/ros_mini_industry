@@ -18,6 +18,9 @@ bridge = CvBridge()
 
 rst_lst = None
 
+ACTION_SPACE = 32
+ACTION_ESC = 27
+
 def image_callback(msg):
     if not isinstance(msg, Image):
         return
@@ -33,7 +36,7 @@ def image_callback(msg):
     # half_mat = cv2.resize(img, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
     # cv2.imshow("image", half_mat)
     action = cv2.waitKey(10) & 0xFF
-    if action == ord('s') or action == ord('S'):
+    if action == ACTION_SPACE:
         detector.save_params()
 
 

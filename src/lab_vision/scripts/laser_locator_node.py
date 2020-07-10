@@ -18,6 +18,8 @@ rst = None
 locator = None
 
 
+ACTION_SPACE = 32
+ACTION_ESC = 27
 def image_callback(msg):
     if not isinstance(msg, Image): return
 
@@ -47,11 +49,11 @@ def image_callback(msg):
     # half_mat = cv2.resize(img, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
     # cv2.imshow("image", half_mat)
     action = cv2.waitKey(10) & 0xFF
-    if action == ord("q") or action == 27:
+    if action == ord("q") or action == ACTION_ESC:
         return
     elif action == ord('p'):
         cv2.waitKey(0)
-    elif action == 32:
+    elif action == ACTION_SPACE:
         locator.save_params()
     elif action != 255:
         locator.handle_action(action)
