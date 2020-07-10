@@ -2,7 +2,8 @@
 # encoding:utf-8
 import cv2
 import json
-from os import path
+import os
+
 
 class AbsDetector(object):
 
@@ -15,32 +16,35 @@ class AbsDetector(object):
         self.v_max = 255
         self.win_name = ""
 
-    def save_params(self, node_path):
+    def save_params(self, node_path, env_name):
         if self.win_name:
-           try:
-               obj = {
-                   "h_min": self.h_min,
-                   "h_max": self.h_max,
-                   "s_min": self.s_min,
-                   "s_max": self.s_max,
-                   "v_min": self.v_min,
-                   "v_max": self.v_max
-               }
-               file_path = path.join(node_path, "config", '{}.json'.format(self.win_name))
-               # json_str = json.dumps(obj)
-               with open(file_path, 'w') as f:
-                   json.dump(obj, f)
-                   print "保存配置文件 success ---------", file_path, obj
-           except Exception as e:
-               print e
+            try:
+                config_dir = os.path.join(node_path, "config", env_name)
+                if not os.path.exists(config_dir):
+                    os.makedirs(config_dir)
+                obj = {
+                    "h_min": self.h_min,
+                    "h_max": self.h_max,
+                    "s_min": self.s_min,
+                    "s_max": self.s_max,
+                    "v_min": self.v_min,
+                    "v_max": self.v_max
+                }
+                file_path = os.path.join(config_dir, '{}.json'.format(self.win_name))
+                # json_str = json.dumps(obj)
+                with open(file_path, 'w') as f:
+                    json.dump(obj, f)
+                    print "保存配置文件 success ---------", file_path, obj
+            except Exception as e:
+                print e
         else:
             print "保存配置失败 --------- 没有窗口名称"
 
-    def load_params(self, node_path):
+    def load_params(self, node_path, env_name):
         if self.win_name:
             try:
-                file_path = path.join(node_path, "config", '{}.json'.format(self.win_name))
-                if not path.exists(file_path):
+                file_path = os.path.join(node_path, "config", env_name, '{}.json'.format(self.win_name))
+                if not os.path.exists(file_path):
                     print "加载配置文件失败. --------- 文件不存在： ", file_path
                     return
                 with open(file_path, 'r') as f:

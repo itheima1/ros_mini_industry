@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 # encoding:utf-8
 import cv2
+import os
+import json
 from locator.laser_locator import LaserRectLocator
 from locator.box_locator import BoxLaserLocator
 from common.geometry_util import *
-from os import path
 
 
 class LocatorMain():
 
-    def __init__(self,node_path, camera_info):
-        camera_info_path = path.join(node_path, camera_info)
-        print "-------------------------------------------------------------1", camera_info_path
+    def __init__(self,node_path, camera_info, env_name="env1"):
+        camera_info_path = os.path.join(node_path, camera_info)
+        print "-------------------------------------------------------------camera_info_path: ", camera_info_path
 
         self.laser_locator = LaserRectLocator()
         self.box_laser_locator = BoxLaserLocator()
@@ -34,25 +35,60 @@ class LocatorMain():
         print "畸变系数", self.dist
         fs.release()
         self.node_path = node_path
+        self.env_name = env_name
         self.init_params()
 
     def init_params(self):
-        self.laser_locator.load_params(self.node_path)
-        self.box_laser_locator.load_params(self.node_path)
+        print "init locator_main params ing.................."
+        self.laser_locator.load_params(self.node_path, self.env_name)
+        self.box_laser_locator.load_params(self.node_path, self.env_name)
+
+        try:
+            file_path = os.path.join(self.node_path, "config", self.env_name, '{}.json'.format("locator_offset"))
+            if not os.path.exists(file_path):
+                print "加载locator_offset配置文件失败. --------- 文件不存在： ", file_path
+                return
+            with open(file_path, 'r') as f:
+                obj = json.load(f)  # 此时a是一个字典对
+                if obj is None:
+                    print "加载locator_offset配置文件失败. --------- "
+                    return
+                print"加载locator_offset配置文件 success. ---------", obj
+                self.offset[0] = obj["laser_offset_x"]
+                self.offset[1] = obj["laser_offset_y"]
+        except Exception as e:
+            print e
 
     def save_params(self):
         print "save locator_main params ing.................."
-        self.laser_locator.save_params(self.node_path)
-        self.box_laser_locator.save_params(self.node_path)
+        self.laser_locator.save_params(self.node_path, self.env_name)
+        self.box_laser_locator.save_params(self.node_path, self.env_name)
+
+        try:
+            config_dir = os.path.join(self.node_path, "config", self.env_name)
+            if not os.path.exists(config_dir):
+                os.makedirs(config_dir)
+            obj = {
+                "laser_offset_x": self.offset[0],
+                "laser_offset_y": self.offset[1],
+            }
+            file_path = os.path.join(config_dir, '{}.json'.format("locator_offset"))
+            # json_str = json.dumps(obj)
+            with open(file_path, 'w') as f:
+                json.dump(obj, f)
+                print "保存locator_offset配置文件 success ---------", file_path, obj
+        except Exception as e:
+            print e
 
     def handle_action(self, key):
-        if key == 81: # left
+        print "action: ", key
+        if key == ord('a'): # left
             self.offset[0] -= 1
-        elif key == 83: # right
+        elif key == ord('d'): # right
             self.offset[0] += 1
-        elif key == 82: # up
+        elif key == ord('w'): # up
             self.offset[1] -= 1
-        elif key == 84: # down
+        elif key == ord('s'): # down
             self.offset[1] += 1
 
         print "offset[x: {},y: {}]".format(self.offset[0], self.offset[1])

@@ -47,8 +47,12 @@ def image_callback(msg):
     # half_mat = cv2.resize(img, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_LINEAR)
     # cv2.imshow("image", half_mat)
     action = cv2.waitKey(10) & 0xFF
-    if action == ord('s') or action == ord('S'):
-        rst.save_params()
+    if action == ord("q") or action == 27:
+        return
+    elif action == ord('p'):
+        cv2.waitKey(0)
+    elif action == 32:
+        locator.save_params()
     elif action != 255:
         locator.handle_action(action)
 
@@ -75,19 +79,17 @@ def box_callback(req):
 if __name__ == '__main__':
     rospy.init_node("laser_box_node")
 
-    laser_mark_pkg_path = rospy.get_param("~laser_mark_pkg_path", "../")
+    laser_locator_pkg_path = rospy.get_param("~laser_locator_pkg_path", "../")
+    config_env = rospy.get_param("~config_env", "env1")
     # laser_mark_pkg_path = "/home/ty/Workspace/ROS/ros_mini_industry/src/lab_vision"
     # g_ctl.update_debug_mode(True)
     # print "debug_mode: ", g_ctl.is_debug_mode
-    camera_info_path = laser_mark_pkg_path + "/data/usb_camera.yml"
+    print "laser_locator_pkg_path: ", laser_locator_pkg_path
 
-    print "laser_mark_pkg_path: ", laser_mark_pkg_path
-    locator = LocatorMain(laser_mark_pkg_path, "data/usb_camera.yml")
+    locator = LocatorMain(laser_locator_pkg_path, "data/usb_camera.yml", config_env)
 
     subscriber = rospy.Subscriber("/usb_cam/image_raw", Image, image_callback)
     service = rospy.Service("/laser/box", GetLaserBoxLocator, box_callback)
 
-
     rospy.spin()
-
     cv2.destroyAllWindows()

@@ -4,6 +4,8 @@
     <arg name="laser_host" default="172.16.54.100"/>
     <arg name="laser_port" default="8899"/>
 
+    <!-- 默认视觉识别参数配置文件目录， 修改此属性可以创建并使用新的环境，并且旧的环境保留-->
+    <arg name="config_env" default="env1"/>
 
     <!--     相机节点 -->
     <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="log" >
@@ -26,9 +28,10 @@
     <!-- USB 相机节点 -->
 <!--    <include file="$(find usb_cam)/launch/uvc_cam-test.launch"/>-->
 
-    <!-- 打标机数据处理节点 -->
-    <node pkg="lab_vision" type="laser_box_node.py" name="laser_box_node" output="screen">
-        <param name="laser_mark_pkg_path" type="str" value="$(find lab_vision)"/>
+    <!-- 激光-定位节点-->
+    <node pkg="lab_vision" type="laser_locator_node.py" name="laser_locator_node" output="screen">
+        <param name="laser_locator_pkg_path" type="str" value="$(find lab_vision)"/>
+        <param name="config_env" type="str" value="$(arg config_env)"/>
     </node>
 
     <!-- 流水线节点 -->

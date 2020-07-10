@@ -7,8 +7,12 @@
     <!-- aubo ip和port -->
     <arg name="aubo_host" default="192.168.1.101"/>
     <arg name="aubo_port" default="8899"/>
-    <arg name="kinect_camera_2_line" default="1072.0"/>
-    <arg name="catch_depth" default="10.0"/>
+    <!-- 相机到传送带表面垂直距离-->
+    <arg name="kinect_camera_2_line" default="1060.0"/>
+    <!-- 传送带表面到AGV小车表面垂直距离-->
+    <arg name="line_2_agv_top" default="10.0"/>
+    <!-- 夹爪抓取深度-->
+    <arg name="catch_depth" default="15.0"/>
 
     <!-- ui ip和port -->
 <!--    <arg name="ui_host" default="192.168.1.100"/>
@@ -27,6 +31,10 @@
 <!--         <param name="ui_host" type="str" value="$(arg ui_host)"/> -->
 <!--         <param name="ui_port" type="int" value="$(arg ui_port)"/> -->
 <!--     </node> -->
+
+    <!-- 其他参数-->
+    <!-- 默认视觉识别参数配置文件目录， 修改此属性可以创建并使用新的环境，并且旧的环境保留-->
+    <arg name="config_env" default="env1"/>
 
     <!-- 流水线节点 -->
     <node pkg="assembly_line" type="assembly_line_node.py" name="assembly_line">
@@ -58,13 +66,17 @@
         <!--        <remap from="/usb_cam/image_raw" to="/laser/image"/>-->
     </node>
 
-    <!-- 盒子定位节点 -->
-    <node pkg="lab_vision" type="box_locator_node.py" name="box_locator">
+    <!-- 机械臂-盒子检测定位节点 -->
+    <node pkg="lab_vision" type="box_detector_node.py" name="box_detector_node">
+        <param name="box_detector_pkg_path" type="str" value="$(find lab_vision)"/>
+        <param name="config_env" type="str" value="$(arg config_env)"/>
+
     </node>
 
-
-    <node pkg="lab_vision" type="laser_box_node.py" name="laser_box_node" output="screen">
-        <param name="laser_mark_pkg_path" type="str" value="$(find lab_vision)"/>
+    <!-- 激光-定位节点-->
+    <node pkg="lab_vision" type="laser_locator_node.py" name="laser_locator_node" output="screen">
+        <param name="laser_locator_pkg_path" type="str" value="$(find lab_vision)"/>
+        <param name="config_env" type="str" value="$(arg config_env)"/>
     </node>
 
 
@@ -73,6 +85,7 @@
         <param name="aubo_host" type="str" value="$(arg aubo_host)"/>
         <param name="aubo_port" type="int" value="$(arg aubo_port)"/>
         <param name="kinect_camera_2_line" type="double" value="$(arg kinect_camera_2_line)"/>
+        <param name="line_2_agv_top" type="double" value="$(arg line_2_agv_top)"/>
         <param name="catch_depth" type="double" value="$(arg catch_depth)"/>
         <param name="aubo_ctrl_pkg_path" type="str" value="$(find aubo_ctrl)"/>
     </node>

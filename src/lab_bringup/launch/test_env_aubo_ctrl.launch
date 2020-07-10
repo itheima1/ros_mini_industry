@@ -3,8 +3,11 @@
     <!-- aubo ip和port -->
     <arg name="aubo_host" default="192.168.1.101"/>
     <arg name="aubo_port" default="8899"/>
-    <arg name="kinect_camera_2_line" default="1072.0"/>
+    <arg name="kinect_camera_2_line" default="1060.0"/>
+    <arg name="line_2_agv_top" default="10.0"/>
     <arg name="catch_depth" default="10.0"/>
+    <!-- 默认视觉识别参数配置文件目录， 修改此属性可以创建并使用新的环境，并且旧的环境保留-->
+    <arg name="config_env" default="env1"/>
 
     <!-- kinect2 相机节点 -->
     <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch"/>
@@ -13,8 +16,9 @@
     <include file="$(find dh_hand_driver)/launch/dh_hand_controller.launch"/>
 
     <!-- 盒子定位节点 -->
-    <node pkg="lab_vision" type="box_locator_node.py" name="box_locator" output="screen">
-        <param name="box_locator_pkg_path" type="str" value="$(find lab_vision)"/>
+    <node pkg="lab_vision" type="box_detector_node.py" name="box_detector_node">
+        <param name="box_detector_pkg_path" type="str" value="$(find lab_vision)"/>
+        <param name="config_env" type="str" value="$(arg config_env)"/>
     </node>
 
     <!-- aubo 控制节点 -->
@@ -22,6 +26,7 @@
         <param name="aubo_host" type="str" value="$(arg aubo_host)"/>
         <param name="aubo_port" type="int" value="$(arg aubo_port)"/>
         <param name="kinect_camera_2_line" type="double" value="$(arg kinect_camera_2_line)"/>
+        <param name="line_2_agv_top" type="double" value="$(arg line_2_agv_top)"/>
         <param name="catch_depth" type="double" value="$(arg catch_depth)"/>
         <param name="aubo_ctrl_pkg_path" type="str" value="$(find aubo_ctrl)"/>
     </node>

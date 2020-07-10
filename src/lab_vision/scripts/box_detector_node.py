@@ -19,7 +19,6 @@ bridge = CvBridge()
 rst_lst = None
 
 def image_callback(msg):
-    print "--------------------------------------------- image_callback: 1"
     if not isinstance(msg, Image):
         return
 
@@ -27,7 +26,6 @@ def image_callback(msg):
 
     img = mat.copy()
 
-    print "--------------------------------------------- image_callback: 2"
     global rst_lst
     rst_lst = detector.start_find(img)
 
@@ -89,14 +87,15 @@ if __name__ == '__main__':
     subscriber = rospy.Subscriber("/kinect2/hd/image_color", Image, image_callback)
     # subscriber = rospy.Subscriber("/kinect2/hd/image_color_rect", Image, image_callback)
 
-    box_locator_pkg_path = rospy.get_param("~box_locator_pkg_path", "../")
+    box_detector_pkg_path = rospy.get_param("~box_detector_pkg_path", "../")
+    config_env = rospy.get_param("~config_env", "env1")
 
     service = rospy.Service("/box/poses", GetBoxPoses, box_callback)
 
     g_ctl.update_debug_mode(True)
     print "--------------------------------------------- debug_mode: ", g_ctl.is_debug_mode
 
-    detector = detector_main.DetectorMain(box_locator_pkg_path)
+    detector = detector_main.DetectorMain(box_detector_pkg_path, config_env)
 
     rospy.spin()
 

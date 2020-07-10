@@ -43,11 +43,9 @@ Mat cameraMatrix, distCoeffs;
 
 float z_up = 0.12f; // 夹取抬起高度
 float catch_depth = 10.0f; // 抓取的深度
-
 float box_height = 45.0f; // 盒子的高度
-float line2agv = 115.0f; // 传送带到小车的距离
-float line_box_distance_z = 1050.0f - box_height; // 相机距离传送带盒子表面距离
-float avg_box_distance_z  = line_box_distance_z;  // 相机距离AGV车盒子表面距离
+float line_box_distance_z ; // 相机距离传送带盒子表面距离
+float avg_box_distance_z  ;  // 相机距离AGV车盒子表面距离
 
 // 待命位置
 double defaultAngles[6] = {
@@ -685,18 +683,20 @@ int main(int argc, char **argv) {
     int port = node.param<int>("aubo_port", 8899);
 
     double kinect_camera_2_line = node.param<double>("kinect_camera_2_line", 1050.0f);
-    catch_depth = node.param<double>("catch_depth", 20.0f);
+    double line_2_agv_top = node.param<double>("line_2_agv_top", 10.0f);
     std::cout << ">>>> kinect_camera_2_line: " << kinect_camera_2_line << std::endl;
 
+    // 抓取深度
+    catch_depth = node.param<double>("catch_depth", 20.0f);
     // 相机距离传送带盒子表面距离
     line_box_distance_z = kinect_camera_2_line - box_height;
     // 相机距离AGV车盒子表面距离
-    avg_box_distance_z = line_box_distance_z - 16.0f;
+    avg_box_distance_z = line_box_distance_z - line_2_agv_top;
 
 
 // 定义工具位姿 ----------------------------------------------------- ④
-//    double tool_x = 0, tool_y = 0, tool_z = 80;
-    double tool_x = 0, tool_y = 0, tool_z = (210.0f - catch_depth);//大环夹爪
+//    double tool_x = 0, tool_y = 0, tool_z = 90; // 标定枪
+    double tool_x = 0, tool_y = 0, tool_z = (190.0f - catch_depth);//大环夹爪
     toolMat= (Mat_<double>(4, 4) <<
             1, 0, 0, tool_x / 1000,
             0, 1, 0, tool_y / 1000,
