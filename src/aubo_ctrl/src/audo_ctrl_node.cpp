@@ -49,12 +49,31 @@ float avg_box_distance_z  ;  // 相机距离AGV车盒子表面距离
 
 // 待命位置
 double defaultAngles[6] = {
-        0.516 * DE2RA,
-        -25.956 * DE2RA,
-        -75.008 * DE2RA,
-        38.053 * DE2RA,
-        -92.830 * DE2RA,
-        0.447 * DE2RA
+          0.000 * DE2RA,
+        -43.000 * DE2RA,
+        -90.000 * DE2RA,
+         30.000 * DE2RA,
+        -90.000 * DE2RA,
+          0.000 * DE2RA
+};
+// 小车高处安全位置
+double agvAboveAngles[6] = {
+        -9.263 * DE2RA,
+        12.880 * DE2RA,
+        -35.598 * DE2RA,
+        34.058 * DE2RA,
+        -90.864 * DE2RA,
+        -66.888 * DE2RA
+};
+
+// 传送带原料高处安全位置
+double lineRawAboveAngles[6] = {
+        47.173 * DE2RA,
+        -7.655 * DE2RA,
+        -64.068 * DE2RA,
+        13.950 * DE2RA,
+        -92.124 * DE2RA,
+        0.446 * DE2RA
 };
 
 static Mat_<double> toolMat;
@@ -334,14 +353,6 @@ void do_feeding(ServerGoalHandle &handle) {
     }
 
     // 先MoveJ到桌子高处，以避免碰撞
-    double agvAboveAngles[6] = {
-            -9.263 * DE2RA,
-            12.880 * DE2RA,
-            -35.598 * DE2RA,
-            34.058 * DE2RA,
-            -90.864 * DE2RA,
-            -66.888 * DE2RA
-    };
     rst = Robot::getInstance()->moveJ(agvAboveAngles, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {
         cerr << "MoveJ到桌子高处，以避免碰撞"+ to_string(rst) << endl;
@@ -354,14 +365,6 @@ void do_feeding(ServerGoalHandle &handle) {
 //    std::vector<int> targetCenter = {1224, 775};
 //    std::vector<int> targetVectorX = {100, 0};
 
-    double lineRawAboveAngles[6] = {
-            47.173 * DE2RA,
-            -7.655 * DE2RA,
-            -64.068 * DE2RA,
-            13.950 * DE2RA,
-            -92.124 * DE2RA,
-            0.446 * DE2RA
-    };
     // 再MoveJ到传送带上方的安全位置， 以避免碰撞
     rst = Robot::getInstance()->moveJ(lineRawAboveAngles, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {
@@ -402,8 +405,8 @@ void do_feeding(ServerGoalHandle &handle) {
     // MoveL上升到目标位置上方
     rst = Robot::getInstance()->moveL(targetPoseUp, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {
-        cerr << "MoveL下降到目标位置失败"+ to_string(rst) << endl;
-        result.result = "MoveL下降到目标位置失败"+ to_string(rst);
+        cerr << "MoveL上升到目标位置上方"+ to_string(rst) << endl;
+        result.result = "MoveL上升到目标位置上方失败"+ to_string(rst);
         handle.setAborted(result);
         return;
     }
@@ -572,20 +575,10 @@ void do_blanking(ServerGoalHandle &handle) {
 
     // 构建agv目标位置位姿
     Mat target2camera = getBoxMat(targetCenter, targetVectorY, avg_box_distance_z);
-
     Mat targetMatUp = exMat * target2camera * toolMatUpInv;
     double *targetPoseUp = convert2pose(targetMatUp);
 
-    // TODONE: 测试用， 记得打开此代码
     //  先MoveJ到桌子高处，以避免碰撞
-    double agvAboveAngles[6] = {
-             -9.263 * DE2RA,
-             12.880 * DE2RA,
-            -35.598 * DE2RA,
-             34.058 * DE2RA,
-            -90.864 * DE2RA,
-            -66.888 * DE2RA
-    };
     rst = Robot::getInstance()->moveJ(agvAboveAngles, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {
         cerr << "MoveJ到桌子高处，以避免碰撞失败" + to_string(rst) << endl;

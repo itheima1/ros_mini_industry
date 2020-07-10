@@ -124,14 +124,16 @@ class LocatorMain():
         angle_degree = None
 
         if box_rst is None:
-            print "-----------没找到盒子，矩形框定位------------"
+            # print "-----------没找到盒子，矩形框定位------------"
             # 2. 如果没检测到盒子，先计算矩形框的包容盒，确定中心位置（根据二值化并查找边缘）
             # 根据矩形框和中心构建坐标系，绘制
             # 计算其偏移后的预测位置，绘制
             laser_rect_rst = self.laser_locator.detect(frame)
             if laser_rect_rst is None:
-                print "未检测到矩形激光标定目标"
+                print "--------未检测到矩形激光标定目标, 请及时调整激光视觉----------"
             else:
+                if self.laser_rect_area is None:
+                    print "--------矩形激光标目标定位成功--------"
                 laser_rect_area, rect_center = laser_rect_rst
                 # 更新最新的位置信息
                 self.laser_rect_area = laser_rect_area
@@ -146,7 +148,7 @@ class LocatorMain():
                 cv2.drawContours(img_show, [points], 0, (0, 255, 255), 2)
 
         else:
-            print "-----------找到盒子，计算偏移量--------：",
+            print "------激光打标机发现盒子，计算偏移量------：",
             # 1. 检测到盒子，并计算中点（注意用离中心的偏移量来修正x位置） 如果没有最新的标定数据，则要求其有激光实施标定
             target_rect_area, box_center_float = box_rst
             # 绘制最小有向包容盒
