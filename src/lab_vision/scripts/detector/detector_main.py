@@ -34,7 +34,7 @@ class DetectorMain:
         # self.spliter_line_in_x = 790
         # self.spliter_agv_in_x = 600
         self.spliter_percent_in_x_line = 0.4
-        self.spliter_percent_in_x_agv = 0.5
+        self.spliter_percent_in_x_agv = 0.6
         self.node_path = node_path
         self.env_name = env_name
         self.init_params()
@@ -67,8 +67,10 @@ class DetectorMain:
             assembly_line_box_lst = find_box(img_masked, img_color_masked, "line")
 
             target_area_range = get_rect_range(target_area)
+
+            spliter_in_x_line = 950
             # 绘制分割线
-            spliter_in_x_line = self.draw_split_line(img_color_masked, target_area_range, self.spliter_percent_in_x_line)
+            spliter_in_x_line = self.draw_split_line(img_color_masked, target_area_range, spliter_in_x_line, False)
 
             # 把盒子根据当前的绝对位置推算个类型
             # 组装线 x < 790 , type=0原材料，type=1成品，type=2上料空位
@@ -79,8 +81,10 @@ class DetectorMain:
             # 取出竖直方向的中点，在水平方向0.6的位置，设置为上料区
             y_start, y_end, x_start, x_end = target_area_range
             radius = 60
+
+            x_end[0] = min(spliter_in_x_line + 600, 1920)
             for i in range(3):
-                center = tuple(np.int0(x_start + (x_end - x_start) * (0.7 - i * 0.1)))
+                center = tuple(np.int0(x_start + (x_end - x_start) * (1.0 - i * 0.1)))
 
                 # 如果上料区的半径区域没点，就确认当前区域可以放盒子，并且不再往左找了 （看看上料区目前有没有盒子）
                 filter_rst_lst = [box for box in assembly_line_box_lst
@@ -148,21 +152,24 @@ class DetectorMain:
                     y_point_next,
                     y_point
                 ])
-                # 在Pro产品区判断
+                # 在Pro产品区判断, 是否有产品空位
                 filter_rst_lst = [box for box in agv_box_lst
                                   if box[2] == 1 and box[0][1] > y_point[1] and box[0][1] < y_point_next[1]]
                 if len(filter_rst_lst) == 0:
                     # 如果没有点
-                    center = tuple((pro_area[0] + pro_area[2]) / 2)
-                    cv2.circle(agv_img_color_masked, center, 60, (230, 80, 160), 2)
-                    cv2.circle(agv_img_color_masked, center, 5, (0,0,255), -1)
+                    center = (pro_area[0] + pro_area[2]) * 0.5
+                    center[0] += ((pro_area[3] - pro_area[0]) * 0.2)[0]
+                    center = np.int0(center)
+
+                    cv2.circle(agv_img_color_masked, tuple(center), 60, (230, 80, 160), 2)
+                    cv2.circle(agv_img_color_masked, tuple(center), 5, (0,0,255), -1)
                     # vect_y = y_end - y_start
                     # vect_y = vect_y / np.linalg.norm(vect_y)
                     # 目前只能传整形数据，就不自己算向量了。
                     vect_y = (0, 1)
-                    agv_box_lst.append([center, tuple(vect_y), 2])
+                    agv_box_lst.append([tuple(center), tuple(vect_y), 2])
 
-                    cv2.arrowedLine(agv_img_color_masked, center, tuple(center + (np.array(vect_y) * 60)),
+                    cv2.arrowedLine(agv_img_color_masked, tuple(center), tuple(center + (np.array(vect_y) * 60)),
                                     (0, 255, 0), 2, cv2.LINE_AA)
                     # cv2.fillPoly(agv_img_color_masked, [pro_area], (200,25,100), cv2.LINE_AA)
 
@@ -204,10 +211,13 @@ class DetectorMain:
         # 打印盒子列表 [(center, vector_x),(center, vector_x) ...]
         return assembly_line_box_lst, agv_box_lst
 
-    def draw_split_line(self, img_color_masked, target_area_range, spliter_percent_in_x):
+    def draw_split_line(self, img_color_masked, target_area_range, spliter_value_in_x, is_percent = True):
         y_start, y_end, x_start, x_end = target_area_range
 
-        x = int((x_end[0] - x_start[0]) * spliter_percent_in_x + x_start[0])
+        if is_percent:
+            x = int((x_end[0] - x_start[0]) * spliter_value_in_x + x_start[0])
+        else:
+            x = spliter_value_in_x
         # 绘制竖分线
         cv2.line(img_color_masked,
                  (x, y_start[1]),

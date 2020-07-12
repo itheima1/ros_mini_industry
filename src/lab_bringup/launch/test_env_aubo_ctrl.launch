@@ -4,10 +4,9 @@
     <arg name="aubo_host" default="192.168.1.101"/>
     <arg name="aubo_port" default="8899"/>
     <arg name="kinect_camera_2_line" default="1050.0"/> <!-- 相机到传送带表面垂直距离-->
-    <arg name="line_2_agv_top" default="10.0"/> <!-- 传送带表面到AGV小车表面垂直距离-->
+    <arg name="line_2_agv_top" default="-10.0"/> <!-- 传送带表面到AGV小车表面垂直距离-->
     <arg name="catch_depth" default="15.0"/> <!-- 夹爪抓取深度-->
-    <!-- 默认视觉识别参数配置文件目录， 修改此属性可以创建并使用新的环境，并且旧的环境保留-->
-    <arg name="config_env" default="env1"/>
+    <arg name="config_env" default="env1"/>  <!-- 默认视觉识别参数配置文件目录， 修改此属性可以创建并使用新的环境，并且旧的环境保留-->
 
     <!-- kinect2 相机节点 -->
     <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch"/>

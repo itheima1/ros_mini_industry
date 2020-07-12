@@ -680,7 +680,7 @@ int main(int argc, char **argv) {
     int port = node.param<int>("aubo_port", 8899);
 
     double kinect_camera_2_line = node.param<double>("kinect_camera_2_line", 1050.0f);
-    double line_2_agv_top = node.param<double>("line_2_agv_top", 10.0f);
+    double line_2_agv_top = node.param<double>("line_2_agv_top", -10.0f);
     std::cout << ">>>> kinect_camera_2_line: " << kinect_camera_2_line << std::endl;
 
     // 抓取深度
@@ -688,7 +688,7 @@ int main(int argc, char **argv) {
     // 相机距离传送带盒子表面距离
     line_box_distance_z = kinect_camera_2_line - box_height;
     // 相机距离AGV车盒子表面距离
-    avg_box_distance_z = line_box_distance_z - line_2_agv_top;
+    avg_box_distance_z = line_box_distance_z + line_2_agv_top;
 
 
 // 定义工具位姿 ----------------------------------------------------- ④
