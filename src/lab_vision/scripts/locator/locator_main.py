@@ -26,6 +26,8 @@ class LocatorMain():
         self.rect_center = None
         self.frame_count = 0
 
+        self.vectors = np.array([])
+
         self.depth = 280.0 / 1000.0
 
         fs = cv2.FileStorage(camera_info_path, cv2.FILE_STORAGE_READ)
@@ -130,7 +132,11 @@ class LocatorMain():
             # 计算其偏移后的预测位置，绘制
             laser_rect_rst = self.laser_locator.detect(frame)
             if laser_rect_rst is None:
-                print "--------未检测到矩形激光标定目标, 请及时调整激光视觉----------"
+                if self.laser_rect_area is None:
+                    print "--------矩形激光标定目标检测中,如超过10s未检测到,请及时调整视觉参数----------"
+                else:
+                    print "--------矩形激光标定目标更新中----------"
+
             else:
                 if self.laser_rect_area is None:
                     print "--------矩形激光标目标定位成功--------"
@@ -151,6 +157,8 @@ class LocatorMain():
             print "------激光打标机发现盒子，计算偏移量------：",
             # 1. 检测到盒子，并计算中点（注意用离中心的偏移量来修正x位置） 如果没有最新的标定数据，则要求其有激光实施标定
             target_rect_area, box_center_float = box_rst
+
+
             # 绘制最小有向包容盒
             cv2.drawContours(img_show, [np.int0(target_rect_area)], 0, (0, 0, 255), 2)
 
@@ -229,10 +237,15 @@ class LocatorMain():
                 center_offset = rst[:2] * 1000
                 center_offset[0] = -center_offset[0]
 
-                print "偏移：[x: {0[0]}, y: {0[1]}], 夹角：{1}".format(center_offset, angle_degree)
-                # TODO: 最近的一波都记录下来，取一下加权平均数
+                # 最近的一波都记录下来，取一下加权平均数
+                # 如果最新的盒子中心均值距离过大 > 30，则直接以最新的为准，否则和最近的5次求平均数
+                vect = np.array([center_offset[0], center_offset[1], angle_degree])
+                self.vectors, vect = self.refresh_vectors(self.vectors, vect)
+                center_offset = vect[:2]
+                angle_degree = vect[2]
 
-                # TODO: 将像素单位转成物理单位mm
+                print "偏移：[x: {0[0]}, y: {0[1]}], 夹角：{1}".format(center_offset, angle_degree)
+
 
         cv2.imshow("image_final", img_show)
 
@@ -249,6 +262,27 @@ class LocatorMain():
 
         # 最后返回偏移量(x,y)和旋转角度Θ
         return center_offset, angle_degree
+
+
+
+    def refresh_vectors(self, vectors, vect):
+        # 如果最新的盒子中心均值距离过大 > 30，则直接以最新的为准，否则和最近的5次求平均数
+        if vectors is None or len(vectors) == 0:
+            return np.array([vect]), vect
+
+        # 计算向量和
+        mean = np.mean(vectors, axis=0)
+        vect_distance = np.linalg.norm(vect - mean)
+        if vect_distance > 30:
+            new_vectors = np.array([vect])
+        else:
+            new_vectors = np.vstack([vectors[-5:], vect])
+
+        new_vect = np.mean(vectors, axis=0)
+
+        return new_vectors, new_vect
+
+
 
     def calc_offset(self, laser_rect_center, laser_rect_vector_x, laser_rect_vector_y, box_center):
         laser_rect = np.array([np.int0(laser_rect_center), np.int0(laser_rect_center + laser_rect_vector_x),
