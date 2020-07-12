@@ -1,0 +1,9 @@
+<launch>
+  <include file="$(find heimarobot)/launch/bringup.launch" />
+  <include file="$(find heimarobot)/launch/lidar/rplidar.launch" />
+  <arg name="map_file" default="$(find heimarobot)/maps/house.yaml"/>
+  <node pkg="map_server" name="map_server"  type="map_server" args="$(arg map_file)" />
+
+  <include file="$(find heimarobot)/launch/amcl.launch" />
+  <include file="$(find heimarobot)/param/navigation/move_base.xml" />
+</launch>

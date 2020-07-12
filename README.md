@@ -1,5 +1,7 @@
 # Mini工业互联网产线
 
+
+## 模块介绍
 目前v1.0版包含以下包及模块
 
 **ROS相关**
@@ -35,8 +37,63 @@ unity_mini_industry
 ui_mini_industry
 
 
-## env
+## 环境准备Requirements
 
+- 安装USB相机依赖
 ```bash
-sudo apt install ros-melodic-libuvc-camera
+sudo apt install ros-$ROS_DISTRO-libuvc-camera
 ```
+
+- 根据ROS项目需要自动安装ros依赖包
+```bash
+cd ros_mini_industry/src
+rosdep install -y --from-paths . --ignore-src --rosdistro $ROS_DISTRO
+```
+
+## 如何使用Usage
+
+先在项目根目录执行一次编译及环境初始化
+```bash
+cd ros_mini_industry/src
+catkin_make
+source devel/setup.bash
+```
+
+### 完整流程
+```bash
+roslaunch lab_bringup startup.launch
+```
+
+### 独立单元流程
+- 流水线
+```bash
+roslaunch lab_bringup 
+```
+
+- 机械臂上下料
+
+在独立的terminal启动一个服务端长期运行
+```bash
+roslaunch lab_bringup test_env_aubo_ctrl.launch
+```
+
+在新的terminal可多次执行以下上下料测试
+```bash
+# 上料
+roslaunch lab_bringup test_run_aubo_feeding.launch
+# 下料
+roslaunch lab_bringup test_run_aubo_blanding.launch
+```
+
+- 激光打标
+
+在独立的terminal启动一个服务端长期运行
+```bash
+roslaunch lab_bringup test_env_laser_mark.launch
+```
+
+在新的terminal可多次执行以下打标测试
+```bash
+roslaunch lab_bringup test_run_laser_mark.launch
+```
+

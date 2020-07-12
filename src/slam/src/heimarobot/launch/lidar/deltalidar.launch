@@ -1,0 +1,9 @@
+<launch>
+   <node name="delta_lidar"    pkg="delta_lidar"  type="delta_lidar_node" output="screen">
+	  <param name="serial_port"         type="string" value="/dev/heimalidar"/>
+	  <param name="frame_id"            type="string" value="laser"/>
+  </node>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser"
+    args="0.0625 0.0 0.07 3.1415926 0.0 0.0 /base_link /laser 40" />
+</launch>

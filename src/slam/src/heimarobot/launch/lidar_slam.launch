@@ -1,0 +1,6 @@
+<launch>
+<include file="$(find heimarobot)/launch/bringup.launch" />
+  <include file="$(find heimarobot)/launch/lidar/rplidar.launch" />
+  <include file="$(find heimarobot)/param/navigation/slam_gmapping.xml" />
+  <include file="$(find heimarobot)/param/navigation/move_base.xml" />
+</launch>

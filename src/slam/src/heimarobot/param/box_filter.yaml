@@ -1,0 +1,12 @@
+scan_filter_chain:
+  - name: box
+    type: laser_filters/LaserScanBoxFilter
+    params:
+      box_frame: laser
+      min_x: -0.02
+      max_x: 0.40
+      min_y: -0.28
+      max_y: 0.28
+      min_z: -0.20
+      max_z: 0.20
+      
