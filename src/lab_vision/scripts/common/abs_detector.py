@@ -45,7 +45,7 @@ class AbsDetector(object):
             try:
                 file_path = os.path.join(node_path, "config", env_name, '{}.json'.format(self.win_name))
                 if not os.path.exists(file_path):
-                    print "加载配置文件失败. --------- 文件不存在： ", file_path
+                    # print "配置文件文件不存在： ", file_path
                     return
                 with open(file_path, 'r') as f:
                     obj = json.load(f)  # 此时a是一个字典对
