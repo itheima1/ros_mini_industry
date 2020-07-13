@@ -48,7 +48,7 @@ class LocatorMain():
         try:
             file_path = os.path.join(self.node_path, "config", self.env_name, '{}.json'.format("locator_offset"))
             if not os.path.exists(file_path):
-                print "加载locator_offset配置文件失败. --------- 文件不存在： ", file_path
+                # print "加载locator_offset配置文件失败. ---------： ", file_path
                 return
             with open(file_path, 'r') as f:
                 obj = json.load(f)  # 此时a是一个字典对
@@ -84,16 +84,16 @@ class LocatorMain():
 
     def handle_action(self, key):
         print "action: ", key
-        if key == ord('a'): # left
+        if key == ord('a') or key == 81: # left
             self.offset[0] -= 1
-        elif key == ord('d'): # right
+        elif key == ord('d') or key == 83: # right
             self.offset[0] += 1
-        elif key == ord('w'): # up
+        elif key == ord('w') or key == 82: # up
             self.offset[1] -= 1
-        elif key == ord('s'): # down
+        elif key == ord('s') or key == 84: # down
             self.offset[1] += 1
 
-        print "offset[x: {},y: {}]".format(self.offset[0], self.offset[1])
+        print "offset[x: {},y: {}], 偏移量已更新，请按空格键保存".format(self.offset[0], self.offset[1])
 
     def point_to_3d(self, p):
         fx, fy = self.mtx[0, 0], self.mtx[1, 1]
@@ -228,7 +228,7 @@ class LocatorMain():
                 angle_radius = np.arccos(cos_angle)
                 angle_degree = np.rad2deg(angle_radius)
 
-                if cross_rst < 0:
+                if cross_rst > 0:
                     angle_degree = -angle_degree
 
                 # 计算三维空间偏移量
