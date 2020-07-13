@@ -468,31 +468,60 @@ void do_blanking(ServerGoalHandle &handle) {
     if (!hasPro) {
         // 有盒子，但是产品区没有盒子
         itheima_msgs::ArmWorkResult result;
-        result.result = "No product box checked";
+        result.result = "No product box on line checked";
         handle.setRejected(result);
         return;
     }
 
+    // 提前先把放置位置确认好
+    Mat_<double> toolMatUp;
+    toolMat.copyTo(toolMatUp);
+    toolMatUp.at<double>(2, 3) += z_up; // z增加12cm
+    const Mat &toolMatUpInv = homogeneousInverse(toolMatUp);
+    const Mat &toolMatInv = homogeneousInverse(toolMat);
+
     // TODO: 测试用， 上线记得把 line_poses 改成 agv_poses 先准备好目标区域位置
     // 判断小车AGV产品是否有空白的目标位置，没有的话，提示用户空出目标位置
-    auto agv_target_pose = agv_poses[agv_poses.size() - 1];
-    if (agv_target_pose.type != 2) {
+
+    // 倒序循环判断有没有可以逆解成功的目标位置
+    itheima_msgs::BoxPose *agv_target_pose = nullptr;
+    for (int j = agv_poses.size() - 1; j >= 0 ; j--) {
+        auto pose = agv_poses[j];
+        if (pose.type == 2) {
+            agv_target_pose = new itheima_msgs::BoxPose(pose);
+
+            std::vector<int> targetCenter = agv_target_pose->center;
+            std::vector<int> targetVectorY = agv_target_pose->vect;
+
+            // 构建agv目标位置位姿
+            Mat target2camera = getBoxMat(targetCenter, targetVectorY, avg_box_distance_z);
+            Mat targetMatUp = exMat * target2camera * toolMatUpInv;
+            double *targetPoseUp = convert2pose(targetMatUp);
+
+            Mat targetMat = exMat * target2camera * toolMatInv;
+            double *targetPose = convert2pose(targetMat);
+
+            // 如果两个位置都逆解成功，则直接停止循环
+            int rst1 = Robot::getInstance()->moveJwithPoseTest(targetPoseUp);
+            int rst2 = Robot::getInstance()->moveJwithPoseTest(targetPose);
+            if (rst1 == aubo_robot_namespace::ErrnoSucc && rst2 == aubo_robot_namespace::ErrnoSucc) {
+                break;
+            }
+        }
+    }
+    if (agv_target_pose == nullptr) {
         // 最后放的不是AGV上产品区的空白目标位置
         itheima_msgs::ArmWorkResult result;
         result.result = "No blank target checked";
         handle.setRejected(result);
         return;
     }
-    std::vector<int> targetCenter = agv_target_pose.center;
-    std::vector<int> targetVectorY = agv_target_pose.vect;
-
     // 激活
     handle.setAccepted();
     itheima_msgs::ArmWorkResult result;
 
     std::vector<int> center = proPose.center;
     std::vector<int> vect = proPose.vect;
-
 //    vector<int> center {1244, 775};
 //    vector<int> vect_x {60 ,-82};
     //2. 机械臂做相应的操作
@@ -503,7 +532,6 @@ void do_blanking(ServerGoalHandle &handle) {
     // [463, 201], [ -14, -100]
     Mat box2CameraMat = getBoxMat(center, vect, line_box_distance_z);
 
-    const Mat &toolMatInv = homogeneousInverse(toolMat);
     cout << "exMat:\n" << exMat << endl;
     cout << "box2CameraMat:\n" << box2CameraMat << endl;
     // 测试模板抓取  `⑤ = ③ · ② · inv(④)`
@@ -512,10 +540,6 @@ void do_blanking(ServerGoalHandle &handle) {
     double *pos = convert2pose(finalMat);
 
     // ----------------------------------定义z后退12cm的位置
-    Mat_<double> toolMatUp;
-    toolMat.copyTo(toolMatUp);
-    toolMatUp.at<double>(2, 3) += z_up; // z增加12cm
-    const Mat &toolMatUpInv = homogeneousInverse(toolMatUp);
     Mat_<double> finalMatUp = exMat * box2CameraMat * toolMatUpInv;
     double *posUp = convert2pose(finalMatUp);
 
@@ -574,10 +598,6 @@ void do_blanking(ServerGoalHandle &handle) {
     // TODO: 上线记得删掉，构建line目标位置位姿
 //    Mat target2camera = getBoxMat(targetCenter, targetVectorY, line_box_distance_z);
 
-    // 构建agv目标位置位姿
-    Mat target2camera = getBoxMat(targetCenter, targetVectorY, avg_box_distance_z);
-    Mat targetMatUp = exMat * target2camera * toolMatUpInv;
-    double *targetPoseUp = convert2pose(targetMatUp);
 
     // TODO: 上线记得删掉，测试代码，移动到上料区上方
 //    rst = Robot::getInstance()->moveJ(lineRawAboveAngles, true);
@@ -601,8 +621,6 @@ void do_blanking(ServerGoalHandle &handle) {
     }
 
     // MoveL下降到目标位置
-    Mat targetMat = exMat * target2camera * toolMatInv;
-    double *targetPose = convert2pose(targetMat);
     rst = Robot::getInstance()->moveL(targetPose, true);
     if (rst != aubo_robot_namespace::ErrnoSucc) {
         cerr << "MoveL下降到目标位置失败"+ to_string(rst) << endl;

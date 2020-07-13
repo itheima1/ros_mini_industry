@@ -111,6 +111,39 @@ int Robot::moveJ(double jointAngle[aubo_robot_namespace::ARM_DOF], bool isBlock)
 }
 float x_offset = 0.000f, y_offset = 0.000f, z_offset = 0.000f;
 
+
+int Robot::moveJwithPoseTest(double pose[6]){
+
+    // 当前关节角
+    JointParam jointParam;
+    int rst1 = Robot::getInstance()->robotServiceGetJointAngleInfo(jointParam);
+    if (rst1 != ErrnoSucc) {
+        std::cerr << "逆解时, 未能获取当前关节角" << std::endl;
+        return rst1;
+    }
+
+    aubo_robot_namespace::Pos pos{pose[0] + x_offset, pose[1] + y_offset, pose[2] + z_offset};
+    aubo_robot_namespace::Rpy rpy{pose[3], pose[4], pose[5]};
+    aubo_robot_namespace::Ori orientation{};
+
+    RPYToQuaternion(rpy, orientation);
+
+    // 目标位置
+    aubo_robot_namespace::Pos position = pos;
+    // 目标姿态
+    aubo_robot_namespace::Ori ori = orientation;
+    // 输出结果：目标的关节角
+    aubo_robot_namespace::wayPoint_S targetWayPoint;
+
+    int rst2 = Robot::getInstance()->robotServiceRobotIk(jointParam.jointPos, position, ori, targetWayPoint);
+    if (rst2 != ErrnoSucc) {
+        std::cerr << "逆解失败" << std::endl;
+        return rst2;
+    }
+
+    return rst2;
+}
+
 int Robot::moveJwithPose(double pose[6], bool isBlock){
 
     // 当前关节角

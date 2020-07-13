@@ -33,6 +33,7 @@ class DetectorMain:
         self.agv_detector = AgvDetector()
         # self.spliter_line_in_x = 790
         # self.spliter_agv_in_x = 600
+        self.spliter_in_x_line = 950
         self.spliter_percent_in_x_line = 0.4
         self.spliter_percent_in_x_agv = 0.6
         self.node_path = node_path
@@ -68,9 +69,8 @@ class DetectorMain:
 
             target_area_range = get_rect_range(target_area)
 
-            spliter_in_x_line = 950
             # 绘制分割线
-            spliter_in_x_line = self.draw_split_line(img_color_masked, target_area_range, spliter_in_x_line, False)
+            spliter_in_x_line = self.draw_split_line(img_color_masked, target_area_range, self.spliter_in_x_line, False)
 
             # 把盒子根据当前的绝对位置推算个类型
             # 组装线 x < 790 , type=0原材料，type=1成品，type=2上料空位
@@ -118,7 +118,7 @@ class DetectorMain:
             print("未发现AGV小车，请检查并确认！ <<<<<<<<<<")
         else:
             agv_img_masked, agv_img_color_masked, agv_target_area = agv_rst
-            # 在AGV小车上查找盒子： agv_img_color_masked是数据源
+            # 在AGV小车上查找盒子： agv_img_color_masked是数据源, [center(x, y), vector_y(x, y)]
             agv_box_lst = find_box(agv_img_masked, agv_img_color_masked, "agv")
 
             agv_target_area_range = get_rect_range(agv_target_area)
@@ -139,39 +139,73 @@ class DetectorMain:
             y_spliters = [0, 0.5, 1.0]
 
             # 把AVG产品区的空白位置构建出点和y向量，且type=2
-            # 遍历每个产品矩形区域，看看有没有落在其中的产品中心点，没有则构建 空白位置数据
+            # 遍历每个产品矩形区域，看看有没有落在其中的产品中心点，没有则构建 空白位置数据-------这里是一行一行遍历的
             for s_index in range(len(y_spliters) - 1):
                 spliter = y_spliters[s_index]
 
+                # 右上角
                 y_point = np.int0(y_start + (y_end - y_start) * spliter)
+                # 右下角
                 y_point_next = np.int0(y_start + (y_end - y_start) * y_spliters[s_index + 1])
 
-                pro_area = np.array([
-                    [x_start[0], y_point[1]],
-                    [x_start[0], y_point_next[1]],
-                    y_point_next,
-                    y_point
-                ])
-                # 在Pro产品区判断, 是否有产品空位
-                filter_rst_lst = [box for box in agv_box_lst
-                                  if box[2] == 1 and box[0][1] > y_point[1] and box[0][1] < y_point_next[1]]
-                if len(filter_rst_lst) == 0:
-                    # 如果没有点
-                    center = (pro_area[0] + pro_area[2]) * 0.5
-                    center[0] += ((pro_area[3] - pro_area[0]) * 0.2)[0]
-                    center = np.int0(center)
+                # ----------------------------------------------------------原料区
+                top_right = np.array([x_end[0], y_start[1]])
+                bottom_right = np.array([x_end[0], y_end[1]])
 
+                raw_area = np.array([
+                    y_point,
+                    y_point_next,
+                    np.int0(top_right + (bottom_right - top_right) * y_spliters[s_index + 1]),
+                    np.int0(top_right + (bottom_right - top_right) * spliter),
+                ])
+
+                # 在原料区判断, 是否有空位
+                filter_raw_lst = [box for box in agv_box_lst
+                                  if box[2] == 0 and y_point[1] < box[0][1] < y_point_next[1]]
+
+                if len(filter_raw_lst) == 0:
+                    # 如果没有点
+                    center = (raw_area[0] + raw_area[2]) * 0.5
+                    center[0] += ((raw_area[3] - raw_area[0]) * 0.1)[0]
+                    center = np.int0(center)
+                    vect_y = (0, 1)
+                    agv_box_lst.append([tuple(center), tuple(vect_y), 2])
                     cv2.circle(agv_img_color_masked, tuple(center), 60, (230, 80, 160), 2)
                     cv2.circle(agv_img_color_masked, tuple(center), 5, (0,0,255), -1)
+                    cv2.arrowedLine(agv_img_color_masked, tuple(center), tuple(center + (np.array(vect_y) * 60)),
+                                    (0, 255, 0), 2, cv2.LINE_AA)
+
+                # ----------------------------------------------------------产品区
+
+                # 矩形区域
+                pro_area = np.array([
+                    [x_start[0], y_point[1]],       # 左上
+                    [x_start[0], y_point_next[1]],  # 左下
+                    y_point_next,                   # 右下
+                    y_point                         # 右上
+                ])
+                # 在Pro产品区判断, 是否有产品空位
+                filter_pro_lst = [box for box in agv_box_lst
+                                  if box[2] == 1 and y_point[1] < box[0][1] < y_point_next[1]]
+
+                if len(filter_pro_lst) == 0:
+                    # 如果没有点
+                    center = (pro_area[0] + pro_area[2]) * 0.5
+                    center[0] += ((pro_area[3] - pro_area[0]) * 0.26)[0]
+                    center = np.int0(center)
                     # vect_y = y_end - y_start
                     # vect_y = vect_y / np.linalg.norm(vect_y)
                     # 目前只能传整形数据，就不自己算向量了。
                     vect_y = (0, 1)
                     agv_box_lst.append([tuple(center), tuple(vect_y), 2])
 
+                    cv2.circle(agv_img_color_masked, tuple(center), 60, (230, 80, 160), 2)
+                    cv2.circle(agv_img_color_masked, tuple(center), 5, (0,0,255), -1)
                     cv2.arrowedLine(agv_img_color_masked, tuple(center), tuple(center + (np.array(vect_y) * 60)),
                                     (0, 255, 0), 2, cv2.LINE_AA)
                     # cv2.fillPoly(agv_img_color_masked, [pro_area], (200,25,100), cv2.LINE_AA)
+
+
 
 
             # 绘制分割线
