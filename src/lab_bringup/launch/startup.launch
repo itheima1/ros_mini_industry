@@ -1,5 +1,8 @@
 <launch>
 
+    <env name="ROS_MASTER_URI" value="http://192.168.1.10:11311" />
+    <env name="ROS_HOSTNAME" value="192.168.1.10" />
+
     <!-- 流水线ip和port -->
     <arg name="assembly_host" default="192.168.1.104"/>
     <arg name="assembly_port" default="5566"/>
@@ -56,7 +59,7 @@
         <param name="image_height" value="960" />
         <param name="pixel_format" value="yuyv" />  <!-- or yuyv/nv12/mjpeg/uncompressed -->
         <param name="camera_frame_id" value="usb_cam" />
-        <param name="framerate" value="30"/>
+        <param name="framerate" value="15"/>
         <!--        <param name="io_method" value="mmap"/>-->
         <!--        <remap from="/usb_cam/image_raw" to="/laser/image"/>-->
     </node>
@@ -90,6 +93,10 @@
         <param name="host" type="str" value="$(arg laser_host)"/>
         <param name="port" type="int" value="$(arg laser_port)"/>
     </node>
+
+<!--    &lt;!&ndash; slam 节点 &ndash;&gt;-->
+<!--    <node pkg="slam_ctrl" type="move_path.py" name="slam_move_path" output="screen">-->
+<!--    </node>-->
 
     <!-- 订单管理 -->
     <node pkg="order_manager" type="order_tip_node.py" name="order_tip" output="screen">

@@ -485,6 +485,8 @@ void do_blanking(ServerGoalHandle &handle) {
 
     // 倒序循环判断有没有可以逆解成功的目标位置
     itheima_msgs::BoxPose *agv_target_pose = nullptr;
+    double *targetPose;
+    double *targetPoseUp;
     for (int j = agv_poses.size() - 1; j >= 0 ; j--) {
         auto pose = agv_poses[j];
         if (pose.type == 2) {
@@ -496,10 +498,10 @@ void do_blanking(ServerGoalHandle &handle) {
             // 构建agv目标位置位姿
             Mat target2camera = getBoxMat(targetCenter, targetVectorY, avg_box_distance_z);
             Mat targetMatUp = exMat * target2camera * toolMatUpInv;
-            double *targetPoseUp = convert2pose(targetMatUp);
+            targetPoseUp = convert2pose(targetMatUp);
 
             Mat targetMat = exMat * target2camera * toolMatInv;
-            double *targetPose = convert2pose(targetMat);
+            targetPose = convert2pose(targetMat);
 
             // 如果两个位置都逆解成功，则直接停止循环
             int rst1 = Robot::getInstance()->moveJwithPoseTest(targetPoseUp);
@@ -509,7 +511,7 @@ void do_blanking(ServerGoalHandle &handle) {
             }
         }
     }
-    if (agv_target_pose == nullptr) {
+    if (agv_target_pose == nullptr || agv_target_pose->type != 2) {
         // 最后放的不是AGV上产品区的空白目标位置
         itheima_msgs::ArmWorkResult result;
         result.result = "No blank target checked";

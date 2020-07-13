@@ -1,0 +1,7 @@
+<launch>
+
+    <env name="ROS_MASTER_URI" value="http://192.168.1.10:11311" />
+    <env name="ROS_HOSTNAME" value="192.168.1.10" />
+
+
+</launch>

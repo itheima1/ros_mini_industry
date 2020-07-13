@@ -1,0 +1,11 @@
+<launch>
+
+    <env name="ROS_MASTER_URI" value="http://192.168.1.10:11311" />
+    <env name="ROS_HOSTNAME" value="192.168.1.10" />
+
+    <!-- 测试打标节点 -->
+    <node pkg="heimarobot" type="move_path.py" name="test_move_path" output="screen">
+    </node>
+
+
+</launch>

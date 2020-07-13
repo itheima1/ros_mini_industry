@@ -5,10 +5,11 @@
         <param name="image_height" value="960" />
         <param name="pixel_format" value="yuyv" />  <!-- or yuyv/nv12/mjpeg/uncompressed -->
         <param name="camera_frame_id" value="usb_cam" />
+        <param name="framerate" value="15"/>
 <!--         <param name="io_method" value="mmap"/>-->
     </node>
-<!--    <node name="image_view" pkg="image_view" type="image_view" respawn="false" output="log">-->
-<!--        <remap from="image" to="/usb_cam/image_raw"/>-->
-<!--        <param name="autosize" value="true" />-->
-<!--    </node>-->
+    <node name="image_view" pkg="image_view" type="image_view" respawn="false" output="log">
+        <remap from="image" to="/usb_cam/image_raw"/>
+        <param name="autosize" value="true" />
+    </node>
 </launch>

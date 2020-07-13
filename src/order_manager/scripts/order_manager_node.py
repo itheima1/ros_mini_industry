@@ -13,6 +13,7 @@ from actionlib import TerminalState, CommState
 from actionlib import ClientGoalHandle
 from itheima_msgs.msg import ArmWorkAction, ArmWorkGoal, ArmWorkFeedback, ArmWorkResult
 from itheima_msgs.msg import LaserMarkAction, LaserMarkGoal, LaserMarkFeedback, LaserMarkResult
+from itheima_msgs.msg import CarMoveAction, CarMoveGoal, CarMoveFeedback, CarMoveResult
 
 
 STATE_INITED = 0  # 初始化完成
@@ -26,6 +27,9 @@ STATE_PRE_BLAND = 7  # 准备下料
 STATE_BLANDED = 8  # 下料完成
 STATE_PRE_OUT_TRANSPORTED = 9  # 准备运送输出
 STATE_OUT_TRANSPORTED = 10  # 运送输出完成
+
+is_laser_marking = False
+is_aubo_blanding = False
 
 
 def reinit_order():
@@ -83,6 +87,45 @@ def wait_for_result(handle, timeout):
 
         rate.sleep()
     return comm_state == CommState.DONE
+
+
+
+def start_slam_feeding():
+    # 创建客户端
+    client = actionlib.ActionClient("/slam/move", ArmWorkAction)
+    # 等待连接服务器
+    client.wait_for_server()
+
+    # 发送请求
+    goal = CarMoveGoal()
+    goal.type = 0
+    goal_handle = client.send_goal(goal)
+    result = wait_for_result(goal_handle, rospy.Duration(60))
+
+    if result:
+        terminal_state = goal_handle.get_terminal_state()
+        get_result = goal_handle.get_result()
+        return terminal_state == TerminalState.SUCCEEDED, get_result
+    return False, None
+
+
+def start_slam_blanding():
+    # 创建客户端
+    client = actionlib.ActionClient("/slam/move", ArmWorkAction)
+    # 等待连接服务器
+    client.wait_for_server()
+
+    # 发送请求
+    goal = CarMoveGoal()
+    goal.type = 1
+    goal_handle = client.send_goal(goal)
+    result = wait_for_result(goal_handle, rospy.Duration(60))
+
+    if result:
+        terminal_state = goal_handle.get_terminal_state()
+        get_result = goal_handle.get_result()
+        return terminal_state == TerminalState.SUCCEEDED, get_result
+    return False, None
 
 
 def start_aubo_blanding():
@@ -165,9 +208,30 @@ def do_work():
         })
 
         # 操作流程
-        # TODO: 有可能是送货
         item = find_item(STATE_INITED)
-        item["state"] = STATE_IN_TRANSPORTED
+
+        # 送货上料
+        item["state"] = STATE_PRE_IN_TRANSPORTED
+        slam_feeding = start_slam_feeding()
+        if slam_feeding[0]:
+            item["state"] = STATE_IN_TRANSPORTED
+            # 成功
+            rospy.loginfo("######## 订单{}, slam上料成功 ######## ".format(id))
+        else:
+            # 失败
+            item["state"] = STATE_INITED
+            # 失败
+            rospy.loginfo("######## 订单{}, slam上料失败 ######## ".format(id))
+            if slam_feeding[1] is not None:
+                rospy.loginfo(slam_feeding[1])
+
+            # 移除工作队列
+            clear_item(item["id"])
+
+        if not slam_feeding[0]:
+            return
+
+        rospy.sleep(10)
 
         # 1. 机械臂上料
         item["state"] = STATE_PRE_FEED
@@ -177,10 +241,10 @@ def do_work():
             # 成功
             start_assembly_line(4)
 
-            rospy.loginfo("######## 订单{}, 上料成功 ######## ".format(id))
+            rospy.loginfo("######## 订单{}, aubo上料成功 ######## ".format(id))
         else:
             # 失败
-            rospy.loginfo("######## 订单{}, 上料失败 ######## ".format(id))
+            rospy.loginfo("######## 订单{}, aubo上料失败 ######## ".format(id))
             item["state"] = STATE_IN_TRANSPORTED
             if feeding[1] is not None:
                 rospy.loginfo(feeding[1])
@@ -232,9 +296,12 @@ def ir_callback(msg):
     if not isinstance(msg, AssemblyIR): return
 
     if msg.ir_1:
+        global is_aubo_blanding
+
         item = find_item(STATE_FEEDED)
         rospy.loginfo("####### IR #### 1 #### True #######")
-        if item is not None:
+        if item is not None and not is_aubo_blanding:
+            is_aubo_blanding = True
             # 更新生产状态
             update_status_producting(item["id"])
             # 1. 停止传送带2号
@@ -254,12 +321,15 @@ def ir_callback(msg):
                 rospy.loginfo("####### 订单{}, 打标失败 #######".format(item["id"]))
                 if mark[1] is not None:
                     rospy.loginfo(mark[1])
+            is_aubo_blanding = False
 
     if msg.ir_2:
+        global is_aubo_blanding
         # 任务完成，机械臂开始将产品下架
         # 1. 停止传送带4号
         item = find_item(STATE_MARKED)
-        if item is not None:
+        if item is not None and not is_aubo_blanding:
+            is_aubo_blanding = True
             rospy.loginfo("############# 停止4号机 ########")
             stop_assembly_line(4)
             rospy.sleep(3)
@@ -267,19 +337,38 @@ def ir_callback(msg):
             item["state"] = STATE_PRE_BLAND
             blanding = start_aubo_blanding()
             if blanding[0]:
-                rospy.loginfo("####### 订单{}, 下架成功 #########".format(item["id"]))
+                rospy.loginfo("####### 订单{}, aubo下架成功 #########".format(item["id"]))
                 item["state"] = STATE_BLANDED
                 start_assembly_line(4)
                 rospy.loginfo("############# 打开4号机 ########")
 
                 update_status_completed(item["id"])
-                clear_item(item["id"])
+                # clear_item(item["id"])
             else:
                 start_assembly_line(4)
                 item["state"] = STATE_MARKED
-                rospy.loginfo("####### 订单{}, 下架失败 #########".format(item["id"]))
+                rospy.loginfo("####### 订单{}, aubo下架失败 #########".format(item["id"]))
                 if blanding[1] is not None:
                     rospy.loginfo(blanding[1])
+
+            if blanding[0]:
+                item = find_item(STATE_BLANDED)
+
+                if item is not None:
+                    item["state"] = STATE_PRE_OUT_TRANSPORTED
+                    slam_blanding = start_slam_blanding()
+                    if slam_blanding[0]:
+                        rospy.loginfo("####### 订单{}, slam下架成功 #########".format(item["id"]))
+                        item["state"] = STATE_OUT_TRANSPORTED
+                        update_status_completed(item["id"])
+                        clear_item(item["id"])
+                    else:
+                        item["state"] = STATE_BLANDED
+                        rospy.loginfo("####### 订单{}, aubo下架失败 #########".format(item["id"]))
+                        if slam_blanding[1] is not None:
+                            rospy.loginfo(slam_blanding[1])
+
+            is_aubo_blanding = False
 
 
 if __name__ == '__main__':
@@ -289,6 +378,9 @@ if __name__ == '__main__':
 
     host = rospy.get_param("~service_host", "192.168.1.100")
     port = rospy.get_param("~service_port", 3000)
+
+    rospy.loginfo("================ web host: {}".format(host))
+    rospy.loginfo("================ web port: {}".format(port))
 
     interval = rospy.get_param("~product_interval", 10)
 
@@ -313,6 +405,7 @@ if __name__ == '__main__':
     order_list_url = "/order/list"
     order_list_body = 'status=2'
 
+    rospy.sleep(30)
     rate = rospy.Rate(0.2)
     while not rospy.is_shutdown():
 
