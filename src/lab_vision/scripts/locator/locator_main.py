@@ -58,6 +58,11 @@ class LocatorMain():
                 print"加载locator_offset配置文件 success. ---------", obj
                 self.offset[0] = obj["laser_offset_x"]
                 self.offset[1] = obj["laser_offset_y"]
+                if "laser_rect_area" in obj:
+                    laser_rect_area_data = obj["laser_rect_area"]
+                    if laser_rect_area_data is not None and len(laser_rect_area_data) > 0:
+                        self.laser_rect_area = np.array(laser_rect_area_data)
+                        self.rect_center = np.int0((self.laser_rect_area[0] + self.laser_rect_area[2]) / 2)
         except Exception as e:
             print e
 
@@ -74,6 +79,9 @@ class LocatorMain():
                 "laser_offset_x": self.offset[0],
                 "laser_offset_y": self.offset[1],
             }
+            if self.laser_rect_area is not None:
+                obj["laser_rect_area"] = self.laser_rect_area.tolist()
+
             file_path = os.path.join(config_dir, '{}.json'.format("locator_offset"))
             # json_str = json.dumps(obj)
             with open(file_path, 'w') as f:

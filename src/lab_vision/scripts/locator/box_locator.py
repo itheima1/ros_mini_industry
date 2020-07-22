@@ -68,9 +68,9 @@ class BoxLaserLocator(AbsDetector):
             curve = approx_curve.shape[0]  # 近似多边形边数
 
             # 绘制原始曲线
-            # print("目标区域面积: [{}]，边个数: [{}]".format(area, curve))
+            print("目标区域面积: [{}]，边个数: [{}]".format(area, curve))
             cv2.drawContours(img_copy, contours, i, (255, 0, 0), 2)
-            if 220000 > area > 140000:
+            if 220000 > area > 50000:
                 # 绘制逼近曲线
                 cv2.drawContours(img_copy, [approx_curve], 0, (120, 200, 20), 2)
 

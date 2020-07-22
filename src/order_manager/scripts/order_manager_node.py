@@ -41,20 +41,32 @@ def reinit_order():
     conn.close()
 
 
-def update_status(id, state):
+def do_update_status(id, state):
     # 0: 新建订单
     # 1: 等待审核
     # 2: 审核通过，等待生产
     # 3: 正在生产
     # 4: 生产完成
     # 5: 生产出问题
-    order_update_url = "/order/update"
-    order_update_body = "status={}&id={}".format(state, id)
-    conn = httplib.HTTPConnection(host, port)
-    conn.request("POST", url=order_update_url, body=order_update_body,
-                 headers={"Content-Type": "application/x-www-form-urlencoded"})
-    conn.getresponse()
-    conn.close()
+    count = 0
+    while count < 5:
+        try:
+            order_update_url = "/order/update"
+            order_update_body = "status={}&id={}".format(state, id)
+            conn = httplib.HTTPConnection(host, port)
+            conn.request("POST", url=order_update_url, body=order_update_body,
+                         headers={"Content-Type": "application/x-www-form-urlencoded"})
+            conn.getresponse()
+            conn.close()
+
+            count = 5
+        except Exception as e:
+            print e
+            count += 1
+
+
+def update_status(id, state):
+    threading.Thread(target=do_update_status, args=(id,state)).start()
 
 
 def update_status_producting(id):
@@ -66,7 +78,7 @@ def update_status_completed(id):
 
 
 def update_status_error(id):
-    update_status(5, id)
+    update_status(id, 5)
 
 
 def wait_for_result(handle, timeout):
@@ -211,27 +223,27 @@ def do_work():
         item = find_item(STATE_INITED)
 
         # 送货上料
-        item["state"] = STATE_PRE_IN_TRANSPORTED
-        slam_feeding = start_slam_feeding()
-        if slam_feeding[0]:
-            item["state"] = STATE_IN_TRANSPORTED
-            # 成功
-            rospy.loginfo("######## 订单{}, slam上料成功 ######## ".format(id))
-        else:
-            # 失败
-            item["state"] = STATE_INITED
-            # 失败
-            rospy.loginfo("######## 订单{}, slam上料失败 ######## ".format(id))
-            if slam_feeding[1] is not None:
-                rospy.loginfo(slam_feeding[1])
-
-            # 移除工作队列
-            clear_item(item["id"])
-
-        if not slam_feeding[0]:
-            return
-
-        rospy.sleep(10)
+        # item["state"] = STATE_PRE_IN_TRANSPORTED
+        # slam_feeding = start_slam_feeding()
+        # if slam_feeding[0]:
+        #     item["state"] = STATE_IN_TRANSPORTED
+        #     # 成功
+        #     rospy.loginfo("######## 订单{}, slam上料成功 ######## ".format(id))
+        # else:
+        #     # 失败
+        #     item["state"] = STATE_INITED
+        #     # 失败
+        #     rospy.loginfo("######## 订单{}, slam上料失败 ######## ".format(id))
+        #     if slam_feeding[1] is not None:
+        #         rospy.loginfo(slam_feeding[1])
+        #
+        #     # 移除工作队列
+        #     clear_item(item["id"])
+        #
+        # if not slam_feeding[0]:
+        #     return
+        #
+        # rospy.sleep(10)
 
         # 1. 机械臂上料
         item["state"] = STATE_PRE_FEED
@@ -296,12 +308,12 @@ def ir_callback(msg):
     if not isinstance(msg, AssemblyIR): return
 
     if msg.ir_1:
-        global is_aubo_blanding
+        global is_laser_marking
 
         item = find_item(STATE_FEEDED)
         rospy.loginfo("####### IR #### 1 #### True #######")
-        if item is not None and not is_aubo_blanding:
-            is_aubo_blanding = True
+        if item is not None and not is_laser_marking:
+            is_laser_marking = True
             # 更新生产状态
             update_status_producting(item["id"])
             # 1. 停止传送带2号
@@ -321,7 +333,7 @@ def ir_callback(msg):
                 rospy.loginfo("####### 订单{}, 打标失败 #######".format(item["id"]))
                 if mark[1] is not None:
                     rospy.loginfo(mark[1])
-            is_aubo_blanding = False
+            is_laser_marking = False
 
     if msg.ir_2:
         global is_aubo_blanding
@@ -343,7 +355,7 @@ def ir_callback(msg):
                 rospy.loginfo("############# 打开4号机 ########")
 
                 update_status_completed(item["id"])
-                # clear_item(item["id"])
+                clear_item(item["id"])
             else:
                 start_assembly_line(4)
                 item["state"] = STATE_MARKED
@@ -351,22 +363,22 @@ def ir_callback(msg):
                 if blanding[1] is not None:
                     rospy.loginfo(blanding[1])
 
-            if blanding[0]:
-                item = find_item(STATE_BLANDED)
-
-                if item is not None:
-                    item["state"] = STATE_PRE_OUT_TRANSPORTED
-                    slam_blanding = start_slam_blanding()
-                    if slam_blanding[0]:
-                        rospy.loginfo("####### 订单{}, slam下架成功 #########".format(item["id"]))
-                        item["state"] = STATE_OUT_TRANSPORTED
-                        update_status_completed(item["id"])
-                        clear_item(item["id"])
-                    else:
-                        item["state"] = STATE_BLANDED
-                        rospy.loginfo("####### 订单{}, aubo下架失败 #########".format(item["id"]))
-                        if slam_blanding[1] is not None:
-                            rospy.loginfo(slam_blanding[1])
+            # if blanding[0]:
+            #     item = find_item(STATE_BLANDED)
+            #
+            #     if item is not None:
+            #         item["state"] = STATE_PRE_OUT_TRANSPORTED
+            #         slam_blanding = start_slam_blanding()
+            #         if slam_blanding[0]:
+            #             rospy.loginfo("####### 订单{}, slam下架成功 #########".format(item["id"]))
+            #             item["state"] = STATE_OUT_TRANSPORTED
+            #             update_status_completed(item["id"])
+            #             clear_item(item["id"])
+            #         else:
+            #             item["state"] = STATE_BLANDED
+            #             rospy.loginfo("####### 订单{}, aubo下架失败 #########".format(item["id"]))
+            #             if slam_blanding[1] is not None:
+            #                 rospy.loginfo(slam_blanding[1])
 
             is_aubo_blanding = False
 

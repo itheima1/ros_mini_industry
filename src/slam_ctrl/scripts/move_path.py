@@ -594,10 +594,11 @@ class HeimaRobotNode:
     def __init__(self):
         # Give the node a name
         rospy.init_node('heimarobot_move_distance', anonymous=False)
-
+        rospy.loginfo("Stopping the robot... abcd")
+        self.robot = HeimaRobot();
         # Set rospy to execute a shutdown function when terminating the script
         rospy.on_shutdown(self.shutdown)
-        self.robot = HeimaRobot();
+
         self.rate = rospy.Rate(20)
 
 

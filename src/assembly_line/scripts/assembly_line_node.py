@@ -58,6 +58,8 @@ def callback(request):
 
 def ir_callback(status):
     global ir_1, ir_2
+
+
     if status[0] != ir_1 or status[1] != ir_2:
         ir_1 = status[0]
         ir_2 = status[1]
@@ -68,6 +70,7 @@ def ir_callback(status):
         ir_publisher.publish(msg)
 
 
+
 def do_recv():
     while not rospy.is_shutdown():
         buffer = ser.read(6)
@@ -75,7 +78,10 @@ def do_recv():
 
         ir_1 = buffer[3] & 0x04 != 0
         ir_2 = buffer[3] & 0x01 != 0
-
+        rospy.loginfo("-------------------------------")
+        rospy.loginfo(ir_1)
+        rospy.loginfo(ir_2)
+        rospy.loginfo("-------------------------------")
         msg = AssemblyIR()
         msg.ir_1 = ir_1
         msg.ir_2 = ir_2
@@ -92,7 +98,7 @@ if __name__ == '__main__':
     host = rospy.get_param("~assembly_host", "192.168.1.104")
     # port = rospy.get_param("~assembly_port", 5566)
 
-    port = "/dev/ttyUSB0"
+    port = "/dev/ttyUSB0" # 传送带继电器（蓝线）
 
     # 创建服务
     service = rospy.Service("/assembly/line_ctrl", AssemblyLineCtrl, callback)
@@ -110,7 +116,7 @@ if __name__ == '__main__':
     ad.connect()
     ad.stop_all()
 
-    ser = serial.Serial(port="/dev/ttyUSB1", baudrate=9600)
+    ser = serial.Serial(port="/dev/ttyUSB1", baudrate=9600) #红外探头继电器（白线），注意先插蓝线，再插白线
     threading.Thread(target=do_recv).start()
 
     # 获取红外数据
