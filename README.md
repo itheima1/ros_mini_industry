@@ -65,12 +65,12 @@ roslaunch lab_bringup startup.launch
 ```
 
 ### 独立单元流程
-- 流水线
+- **流水线**
 ```bash
-roslaunch lab_bringup 
+roslaunch lab_bringup test_env_assembly.launch
 ```
 
-- 机械臂上下料
+- **机械臂上下料**
 
 在独立的terminal启动一个服务端长期运行
 ```bash
@@ -85,7 +85,7 @@ roslaunch lab_bringup test_run_aubo_feeding.launch
 roslaunch lab_bringup test_run_aubo_blanding.launch
 ```
 
-- 激光打标
+- **激光打标**
 
 在独立的terminal启动一个服务端长期运行
 ```bash
@@ -95,5 +95,19 @@ roslaunch lab_bringup test_env_laser_mark.launch
 在新的terminal可多次执行以下打标测试
 ```bash
 roslaunch lab_bringup test_run_laser_mark.launch
+```
+
+- **夹爪开合**
+
+开启服务
+
+```bash
+roslaunch dh_hand_driver dh_hand_controller.launch
+```
+
+测试开合
+
+```bash
+rosrun dh_hand_driver hand_controller_client 1 50 80
 ```
 
